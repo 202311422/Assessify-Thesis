@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./DashboardPage.css";
 
-/* =========================
-   ANONYMOUS NAME GENERATOR
-========================= */
 function generateAnonymousName(seed = "") {
   const adjectives = [
     "Anonymous",
@@ -43,9 +40,6 @@ function generateAnonymousName(seed = "") {
   return `${adj} ${animal}`;
 }
 
-/* =========================
-   STATIC DATA
-========================= */
 const assessments = [
   {
     title: "Computer Science",
@@ -77,53 +71,22 @@ const assessments = [
   },
 ];
 
-const ongoing = [
-  {
-    title: "Getting to Know You",
-    progress: 25,
-    type: "getting-to-know-you",
-    image:
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    title: "Interest Assessment",
-    progress: 60,
-    type: "interest",
-    image:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    title: "Skills Assessment",
-    progress: 0,
-    type: "skills",
-    image:
-      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
-  },
-];
-
-/* =========================
-   COMPONENT
-========================= */
 export default function DashboardPage({
   user,
   handleLogout,
   onStartAssessment,
 }) {
   const [savedResults, setSavedResults] = useState([]);
-  const [showAllOngoing, setShowAllOngoing] = useState(false);
+  const [savedProgress, setSavedProgress] = useState(null);
   const [showAllAssessments, setShowAllAssessments] = useState(false);
 
   const fullName = generateAnonymousName(user?.email || "guest");
   const email = user?.email || "No email";
 
-  const visibleOngoing = showAllOngoing ? ongoing : ongoing.slice(0, 2);
   const visibleAssessments = showAllAssessments
     ? assessments
     : assessments.slice(0, 3);
 
-  /* =========================
-     FETCH RESULTS
-  ========================= */
   useEffect(() => {
     if (!user?.id) return;
 
@@ -139,16 +102,34 @@ export default function DashboardPage({
       .catch((err) => {
         console.error("Fetch results error:", err);
       });
+
+    const keyPrefix = `assessify_progress_${user.id}_`;
+    let latestProgress = null;
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+
+      if (key && key.startsWith(keyPrefix)) {
+        const progress = JSON.parse(localStorage.getItem(key));
+
+        if (
+          !latestProgress ||
+          new Date(progress.updatedAt) > new Date(latestProgress.updatedAt)
+        ) {
+          latestProgress = progress;
+        }
+      }
+    }
+
+    setSavedProgress(latestProgress);
   }, [user]);
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="dashboard-page">
       <header className="dashboard-topbar">
         <div className="dashboard-brand">
           <img src="/logo512.png" alt="Logo" className="dashboard-logo" />
+
           <div className="dashboard-brand-text">
             <h1>ASSESSIFY</h1>
             <span>AI-assisted program fit dashboard</span>
@@ -169,7 +150,6 @@ export default function DashboardPage({
 
       <main className="dashboard-main">
         <div className="dashboard-grid">
-          {/* LEFT SIDE */}
           <section className="dashboard-left">
             <div className="hero-card">
               <div className="hero-content">
@@ -198,15 +178,13 @@ export default function DashboardPage({
                   </div>
                 </div>
 
-                {/* HOW IT WORKS */}
                 <div className="how-card">
                   <h3>How it works</h3>
 
                   <div className="how-step">
                     <div className="step-number">1</div>
                     <p>
-                      Answer questions about your interests, strengths, and
-                      goals.
+                      Answer questions about your interests, strengths, and goals.
                     </p>
                   </div>
 
@@ -228,57 +206,61 @@ export default function DashboardPage({
               </div>
             </div>
 
-            {/* CONTINUE */}
             <section className="dashboard-section">
               <div className="section-header">
                 <h3>Continue where you left off</h3>
-
-                {ongoing.length > 2 && (
-                  <button
-                    className="section-link"
-                    onClick={() => setShowAllOngoing(!showAllOngoing)}
-                  >
-                    {showAllOngoing ? "Show less" : "View all"}
-                  </button>
-                )}
               </div>
 
-              <div className="card-grid two-col">
-                {visibleOngoing.map((item, index) => (
-                  <div className="dashboard-card" key={index}>
+              {savedProgress ? (
+                <div className="card-grid two-col">
+                  <div className="dashboard-card">
                     <div
                       className="card-image"
-                      style={{ backgroundImage: `url(${item.image})` }}
+                      style={{
+                        backgroundImage:
+                          "url(https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200&auto=format&fit=crop)",
+                      }}
                     ></div>
 
                     <div className="card-body">
                       <div className="card-top-row">
-                        <h4>{item.title}</h4>
+                        <h4>{savedProgress.assessmentTitle}</h4>
                         <span className="progress-badge">
-                          {item.progress}%
+                          {savedProgress.progressPercent}%
                         </span>
                       </div>
 
                       <div className="progress-bar">
                         <div
                           className="progress-fill"
-                          style={{ width: `${item.progress}%` }}
+                          style={{
+                            width: `${savedProgress.progressPercent}%`,
+                          }}
                         ></div>
                       </div>
 
                       <button
                         className="card-action"
-                        onClick={() => onStartAssessment(item.type)}
+                        onClick={() =>
+                          onStartAssessment(savedProgress.assessmentType)
+                        }
                       >
                         Continue →
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div className="results-lock-box">
+                  <h4>No unfinished assessment</h4>
+                  <p>
+                    Start an assessment, then exit before submitting to continue
+                    later.
+                  </p>
+                </div>
+              )}
             </section>
 
-            {/* AVAILABLE */}
             <section className="dashboard-section">
               <div className="section-header">
                 <h3>Available assessments</h3>
@@ -322,7 +304,6 @@ export default function DashboardPage({
             </section>
           </section>
 
-          {/* RIGHT SIDE */}
           <aside className="dashboard-right">
             <div className="profile-card">
               <div className="profile-row">
@@ -339,7 +320,6 @@ export default function DashboardPage({
               </div>
             </div>
 
-            {/* RESULTS */}
             <div className="fit-card">
               <div className="fit-header">
                 <div>

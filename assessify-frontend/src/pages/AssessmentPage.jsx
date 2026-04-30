@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./AssessmentPage.css";
 import { assessmentsData } from "../data/assessments";
 import { calculateTraits } from "../utils/calculateTraits";
@@ -11,8 +11,46 @@ export default function AssessmentPage({
   onSubmitAssessment,
 }) {
   const assessment = assessmentsData[assessmentType];
-  const [answers, setAnswers] = useState({});
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const progressKey = useMemo(() => {
+    return `assessify_progress_${user?.id || "guest"}_${assessmentType}`;
+  }, [user, assessmentType]);
+
+  const savedProgress = useMemo(() => {
+    const saved = localStorage.getItem(progressKey);
+    return saved ? JSON.parse(saved) : null;
+  }, [progressKey]);
+
+  const [answers, setAnswers] = useState(() => savedProgress?.answers || {});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
+    return savedProgress?.currentQuestionIndex || 0;
+  });
+
+  useEffect(() => {
+    if (!assessment) return;
+
+    const answeredCount = Object.keys(answers).length;
+
+    if (answeredCount > 0) {
+      const progressPercent = Math.round(
+        (answeredCount / assessment.questions.length) * 100
+      );
+
+      localStorage.setItem(
+        progressKey,
+        JSON.stringify({
+          assessmentType,
+          assessmentTitle: assessment.title,
+          answers,
+          currentQuestionIndex,
+          progressPercent,
+          answeredCount,
+          totalQuestions: assessment.questions.length,
+          updatedAt: new Date().toISOString(),
+        })
+      );
+    }
+  }, [answers, currentQuestionIndex, assessment, assessmentType, progressKey]);
 
   if (!assessment) {
     return (
@@ -34,6 +72,7 @@ export default function AssessmentPage({
 
   const questions = assessment.questions;
   const currentQuestion = questions[currentQuestionIndex];
+
   const progressPercent =
     ((currentQuestionIndex + 1) / questions.length) * 100;
 
@@ -64,6 +103,10 @@ export default function AssessmentPage({
     }
   };
 
+  const handleExit = () => {
+    setPage("dashboard");
+  };
+
   const handleSubmit = () => {
     if (Object.keys(answers).length !== questions.length) {
       alert("Please answer all questions first.");
@@ -80,6 +123,8 @@ export default function AssessmentPage({
 
     const traitScores = calculateTraits(formattedAnswers);
     const results = scoreAssessment(traitScores);
+
+    localStorage.removeItem(progressKey);
 
     onSubmitAssessment({
       formattedAnswers,
@@ -110,6 +155,7 @@ export default function AssessmentPage({
                 {Object.keys(answers).length} answered
               </span>
             </div>
+
             <div className="assessment-progress-bar">
               <div
                 className="assessment-progress-fill"
@@ -119,7 +165,6 @@ export default function AssessmentPage({
           </div>
         </div>
 
-        {/* 🔥 Minor change: added fade-in */}
         <div className="single-question-card fade-in">
           <div className="question-number-badge">
             {currentQuestionIndex + 1}
@@ -140,7 +185,6 @@ export default function AssessmentPage({
                 <span className="option-number">{index + 1}</span>
                 <span className="option-text">{option}</span>
 
-                {/* 🔥 Minor change: checkmark */}
                 {answers[currentQuestion.id] === option && (
                   <span className="check-icon">✓</span>
                 )}
@@ -150,7 +194,7 @@ export default function AssessmentPage({
         </div>
 
         <div className="assessment-actions">
-          <button className="back-btn" onClick={() => setPage("dashboard")}>
+          <button className="back-btn" onClick={handleExit}>
             Exit Assessment
           </button>
 

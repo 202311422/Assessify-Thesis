@@ -581,3 +581,100 @@
 .logout-btn:hover {
   background: rgba(255,255,255,0.15);
 }
+/* PREMIUM RESULTS CARD */
+.fit-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.fit-card::before {
+  content: "";
+  position: absolute;
+  top: -70px;
+  right: -70px;
+  width: 160px;
+  height: 160px;
+  background: rgba(109, 147, 174, 0.14);
+  border-radius: 50%;
+}
+
+.fit-header {
+  position: relative;
+  z-index: 1;
+}
+
+.fit-header h3 {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+
+.fit-subtitle {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fit-list {
+  position: relative;
+  z-index: 1;
+}
+
+.fit-item {
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.fit-item:first-child {
+  background: linear-gradient(135deg, #eef6ff, #ffffff);
+  border-color: #93c5fd;
+}
+
+.fit-rank {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.fit-text h4 {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.fit-text p {
+  font-size: 13px;
+}
+
+.match-pill {
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.result-date {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.results-lock-box {
+  position: relative;
+  z-index: 1;
+}
+.how-card {
+  max-width: 320px;
+}
+
+.how-step p {
+  font-size: 13px;
+  line-height: 1.45;
+}

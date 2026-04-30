@@ -1,24 +1,51 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "./DashboardPage.css";
 
-const topPrograms = [
-  {
-    name: "BS Computer Science",
-    match: "75%",
-    reason: "Strong logic and problem-solving",
-  },
-  {
-    name: "BS Information Technology",
-    match: "68%",
-    reason: "Interested in technology and systems",
-  },
-  {
-    name: "BS Accountancy",
-    match: "54%",
-    reason: "Shows structured and analytical thinking",
-  },
-];
+/* =========================
+   ANONYMOUS NAME GENERATOR
+========================= */
+function generateAnonymousName(seed = "") {
+  const adjectives = [
+    "Anonymous",
+    "Curious",
+    "Silent",
+    "Brave",
+    "Chill",
+    "Smart",
+    "Lucky",
+    "Calm",
+    "Quick",
+    "Clever",
+  ];
 
+  const animals = [
+    "Capybara",
+    "Panda",
+    "Owl",
+    "Fox",
+    "Tiger",
+    "Koala",
+    "Dolphin",
+    "Eagle",
+    "Wolf",
+    "Penguin",
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const adj = adjectives[Math.abs(hash) % adjectives.length];
+  const animal = animals[Math.abs(hash * 7) % animals.length];
+
+  return `${adj} ${animal}`;
+}
+
+/* =========================
+   STATIC DATA
+========================= */
 const assessments = [
   {
     title: "Computer Science",
@@ -41,6 +68,13 @@ const assessments = [
     image:
       "https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=1200&auto=format&fit=crop",
   },
+  {
+    title: "Business Administration",
+    code: "CBA",
+    type: "business-administration",
+    image:
+      "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop",
+  },
 ];
 
 const ongoing = [
@@ -58,29 +92,63 @@ const ongoing = [
     image:
       "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop",
   },
+  {
+    title: "Skills Assessment",
+    progress: 0,
+    type: "skills",
+    image:
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop",
+  },
 ];
 
-export default function DashboardPage({ user, handleLogout, onStartAssessment }) {
-  const fullName = user?.full_name || "Noel Justin Notario";
-  const email = user?.email || "202311422@gordoncollege.edu.ph";
+/* =========================
+   COMPONENT
+========================= */
+export default function DashboardPage({
+  user,
+  handleLogout,
+  onStartAssessment,
+}) {
+  const [savedResults, setSavedResults] = useState([]);
+  const [showAllOngoing, setShowAllOngoing] = useState(false);
+  const [showAllAssessments, setShowAllAssessments] = useState(false);
 
-  const handleStartAssessment = () => {
-    onStartAssessment("getting-to-know-you");
-  };
+  const fullName = generateAnonymousName(user?.email || "guest");
+  const email = user?.email || "No email";
 
-  const handleContinueAssessment = (type) => {
-    onStartAssessment(type);
-  };
+  const visibleOngoing = showAllOngoing ? ongoing : ongoing.slice(0, 2);
+  const visibleAssessments = showAllAssessments
+    ? assessments
+    : assessments.slice(0, 3);
 
-  const handleCourseAssessment = (type) => {
-    onStartAssessment(type);
-  };
+  /* =========================
+     FETCH RESULTS
+  ========================= */
+  useEffect(() => {
+    if (!user?.id) return;
 
+    axios
+      .get(
+        `http://localhost/assessify/backend/assessment/get_results.php?user_id=${user.id}`
+      )
+      .then((res) => {
+        if (res.data.success) {
+          setSavedResults(res.data.results);
+        }
+      })
+      .catch((err) => {
+        console.error("Fetch results error:", err);
+      });
+  }, [user]);
+
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="dashboard-page">
       <header className="dashboard-topbar">
         <div className="dashboard-brand">
-          <img src="/logo512.png" alt="Assessify Logo" className="dashboard-logo" />
+          <img src="/logo512.png" alt="Logo" className="dashboard-logo" />
           <div className="dashboard-brand-text">
             <h1>ASSESSIFY</h1>
             <span>AI-assisted program fit dashboard</span>
@@ -101,58 +169,82 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
 
       <main className="dashboard-main">
         <div className="dashboard-grid">
+          {/* LEFT SIDE */}
           <section className="dashboard-left">
             <div className="hero-card">
               <div className="hero-content">
                 <div className="hero-text">
                   <p className="hero-welcome">Welcome back, {fullName}</p>
+
                   <h2>Find the best college program for you.</h2>
+
                   <p className="hero-description">
-                    Start with a short guided assessment. Assessify uses rule-based
-                    matching with AI-assisted explanations to recommend programs that
-                    fit your interests, strengths, and goals.
+                    Start with a short guided assessment. Assessify evaluates
+                    your responses using rule-based scoring and presents
+                    recommended programs with explanations.
                   </p>
 
                   <div className="hero-actions">
                     <button
                       className="primary-btn"
-                      onClick={handleStartAssessment}
+                      onClick={() =>
+                        onStartAssessment("getting-to-know-you")
+                      }
                     >
                       Start Assessment →
                     </button>
-                    <div className="time-pill">Takes around 2–3 minutes</div>
+
+                    <div className="time-pill">Takes 2–3 minutes</div>
                   </div>
                 </div>
 
+                {/* HOW IT WORKS */}
                 <div className="how-card">
                   <h3>How it works</h3>
 
                   <div className="how-step">
                     <div className="step-number">1</div>
-                    <p>Answer a short assessment</p>
+                    <p>
+                      Answer questions about your interests, strengths, and
+                      goals.
+                    </p>
                   </div>
 
                   <div className="how-step">
                     <div className="step-number">2</div>
-                    <p>Get matched programs and fit percentages</p>
+                    <p>
+                      Assessify calculates your program match using rule-based
+                      scoring.
+                    </p>
                   </div>
 
                   <div className="how-step">
                     <div className="step-number">3</div>
-                    <p>Read AI-assisted explanations for each recommendation</p>
+                    <p>
+                      Review your recommended programs with short explanations.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* CONTINUE */}
             <section className="dashboard-section">
               <div className="section-header">
                 <h3>Continue where you left off</h3>
-                <button className="section-link">View all</button>
+
+                {ongoing.length > 2 && (
+                  <button
+                    className="section-link"
+                    onClick={() => setShowAllOngoing(!showAllOngoing)}
+                  >
+                    {showAllOngoing ? "Show less" : "View all"}
+                  </button>
+                )}
               </div>
 
               <div className="card-grid two-col">
-                {ongoing.map((item, index) => (
+                {visibleOngoing.map((item, index) => (
                   <div className="dashboard-card" key={index}>
                     <div
                       className="card-image"
@@ -162,7 +254,9 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
                     <div className="card-body">
                       <div className="card-top-row">
                         <h4>{item.title}</h4>
-                        <span className="progress-badge">{item.progress}%</span>
+                        <span className="progress-badge">
+                          {item.progress}%
+                        </span>
                       </div>
 
                       <div className="progress-bar">
@@ -174,7 +268,7 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
 
                       <button
                         className="card-action"
-                        onClick={() => handleContinueAssessment(item.type)}
+                        onClick={() => onStartAssessment(item.type)}
                       >
                         Continue →
                       </button>
@@ -184,18 +278,29 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
               </div>
             </section>
 
+            {/* AVAILABLE */}
             <section className="dashboard-section">
               <div className="section-header">
                 <h3>Available assessments</h3>
-                <button className="section-link">View all</button>
+
+                {assessments.length > 3 && (
+                  <button
+                    className="section-link"
+                    onClick={() =>
+                      setShowAllAssessments(!showAllAssessments)
+                    }
+                  >
+                    {showAllAssessments ? "Show less" : "View all"}
+                  </button>
+                )}
               </div>
 
               <div className="card-grid three-col">
-                {assessments.map((item, index) => (
+                {visibleAssessments.map((item, index) => (
                   <div
                     className="dashboard-card"
                     key={index}
-                    onClick={() => handleCourseAssessment(item.type)}
+                    onClick={() => onStartAssessment(item.type)}
                     style={{ cursor: "pointer" }}
                   >
                     <div
@@ -206,8 +311,9 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
                     <div className="card-body assessment-body">
                       <div>
                         <h4>{item.title}</h4>
-                        <p>Explore fit for this area</p>
+                        <p>Explore fit</p>
                       </div>
+
                       <span className="course-code">{item.code}</span>
                     </div>
                   </div>
@@ -216,11 +322,12 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
             </section>
           </section>
 
+          {/* RIGHT SIDE */}
           <aside className="dashboard-right">
             <div className="profile-card">
               <div className="profile-row">
                 <img
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop"
+                  src="https://api.dicebear.com/7.x/adventurer/svg?seed=student"
                   alt="Profile"
                   className="profile-avatar"
                 />
@@ -228,49 +335,48 @@ export default function DashboardPage({ user, handleLogout, onStartAssessment })
                 <div className="profile-info">
                   <h3>{fullName}</h3>
                   <p>{email}</p>
-                  <button className="edit-profile-btn">Edit profile</button>
                 </div>
               </div>
             </div>
 
+            {/* RESULTS */}
             <div className="fit-card">
               <div className="fit-header">
                 <div>
-                  <h3>Programs that fit you</h3>
-                  <p>Unlock after finishing the assessment</p>
+                  <h3>Your Results</h3>
+                  <p className="fit-subtitle">
+                    Your latest saved recommendations.
+                  </p>
                 </div>
-                <span className="preview-pill">Preview</span>
               </div>
 
               <div className="fit-list">
-                {topPrograms.map((program, index) => (
-                  <div className="fit-item" key={index}>
-                    <div className="fit-text">
-                      <h4>{program.name}</h4>
-                      <p>{program.reason}</p>
+                {savedResults.length > 0 ? (
+                  savedResults.slice(0, 3).map((item, index) => (
+                    <div className="fit-item" key={index}>
+                      <div className="fit-rank">#{index + 1}</div>
+
+                      <div className="fit-text">
+                        <h4>{item.top_program}</h4>
+                        <p>{item.top_reason}</p>
+
+                        <span className="result-date">
+                          Taken on{" "}
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <span className="match-pill match-orange">
+                        {item.top_percentage}% match
+                      </span>
                     </div>
-
-                    <span
-                      className={`match-pill ${
-                        index === 0
-                          ? "match-orange"
-                          : index === 1
-                          ? "match-yellow"
-                          : "match-gray"
-                      }`}
-                    >
-                      {program.match} match
-                    </span>
+                  ))
+                ) : (
+                  <div className="results-lock-box">
+                    <h4>No results yet</h4>
+                    <p>Take an assessment to see your results.</p>
                   </div>
-                ))}
-              </div>
-
-              <div className="results-lock-box">
-                <h4>Need your results first?</h4>
-                <p>
-                  Complete the assessment to unlock final recommendations and
-                  detailed explanations.
-                </p>
+                )}
               </div>
             </div>
           </aside>

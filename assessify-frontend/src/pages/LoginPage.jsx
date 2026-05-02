@@ -20,11 +20,9 @@ export default function LoginPage({ setPage, onLoginSuccess }) {
       } else {
         alert(res.data.message);
       }
-
     } catch (error) {
       console.error("Login error:", error);
 
-      // 🔥 Improved error messages
       if (error.response) {
         alert("Server error: " + JSON.stringify(error.response.data));
       } else if (error.request) {
@@ -38,13 +36,10 @@ export default function LoginPage({ setPage, onLoginSuccess }) {
   return (
     <div className="login-page">
       <div className="login-wrapper">
-        
-        {/* LEFT SIDE */}
         <div className="login-left">
           <h1>WELCOME BACK</h1>
           <p className="subtitle">Welcome back! Please enter your details.</p>
 
-          {/* EMAIL */}
           <div className="form-group">
             <label>Email</label>
             <input
@@ -55,7 +50,6 @@ export default function LoginPage({ setPage, onLoginSuccess }) {
             />
           </div>
 
-          {/* PASSWORD */}
           <div className="form-group">
             <label>Password</label>
             <div className="password-wrapper">
@@ -79,7 +73,6 @@ export default function LoginPage({ setPage, onLoginSuccess }) {
             </div>
           </div>
 
-          {/* OPTIONS */}
           <div className="login-options">
             <label className="remember-box">
               <input
@@ -95,48 +88,40 @@ export default function LoginPage({ setPage, onLoginSuccess }) {
             </button>
           </div>
 
-          {/* LOGIN BUTTON */}
           <button className="sign-in-btn" onClick={handleLogin}>
             Sign in
           </button>
 
-          {/* GOOGLE */}
           <button type="button" className="google-btn">
             <span className="google-icon">G</span>
             Sign in with Google
           </button>
 
-          {/* SIGN UP */}
           <p className="signup-text">
             Don&apos;t have an account?{" "}
-            <button
-              className="signup-link"
-              onClick={() => setPage("register")}
-            >
+            <button className="signup-link" onClick={() => setPage("register")}>
               Sign up for free!
             </button>
           </p>
         </div>
 
-        {/* RIGHT SIDE */}
         <div className="login-right">
           <div className="visual-box">
             <img
               src="/login-visual.png"
-              alt=""
-              className="side-image"npm start
+              alt="Gordon College"
+              className="side-image"
               onError={(e) => {
                 e.target.style.display = "none";
                 e.target.nextSibling.style.display = "flex";
               }}
             />
             <div className="fallback-visual">
-              <span>LOGO</span>
-              <span>or picture</span>
+              <span>ASSESSIFY</span>
+              <span>GC</span>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

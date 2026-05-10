@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Login</title>
+</head>
+<body>
+  <h2>Test Student Login</h2>
+
+  <button onclick="testLogin()">Login Test User</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function testLogin() {
+      const response = await fetch("http://localhost/assessify/backend/auth/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: "test@student.com",
+          password: "123456"
+        })
+      });
+
+      const data = await response.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

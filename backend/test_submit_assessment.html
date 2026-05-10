@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Submit Assessment</title>
+</head>
+<body>
+  <h2>Test Submit Assessment</h2>
+
+  <button onclick="submitAssessment()">Submit Test Assessment</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function submitAssessment() {
+      const response = await fetch("http://localhost/assessify/backend/assessment/submit_assessment.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          user_id: 1,
+          answers: [
+            {
+              question_id: 1,
+              choice_id: 1
+            },
+            {
+              question_id: 2,
+              choice_id: 7
+            },
+            {
+              question_id: 3,
+              choice_id: 11
+            },
+            {
+              question_id: 4,
+              choice_id: 16
+            },
+            {
+              question_id: 5,
+              text_answer: "I want to build apps, solve problems, and work with computers."
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

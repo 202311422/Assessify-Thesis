@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Admin Login</title>
+</head>
+<body>
+  <h2>Test Admin Login</h2>
+
+  <button onclick="testAdminLogin()">Login Admin</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function testAdminLogin() {
+      const response = await fetch("http://localhost/assessify/backend/admin/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: "admin@assessify.com",
+          password: "admin123"
+        })
+      });
+
+      const data = await response.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

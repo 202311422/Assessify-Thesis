@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Register</title>
+</head>
+<body>
+  <h2>Test Student Register</h2>
+
+  <button onclick="testRegister()">Register Test User</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function testRegister() {
+      const response = await fetch("http://localhost/assessify/backend/auth/register.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          full_name: "Test Student",
+          email: "test@student.com",
+          password: "123456",
+          applicant_number: "APP-001"
+        })
+      });
+
+      const data = await response.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

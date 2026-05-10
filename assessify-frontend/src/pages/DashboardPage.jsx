@@ -2,75 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./DashboardPage.css";
 
-function generateAnonymousName(seed = "") {
-  const adjectives = [
-    "Anonymous",
-    "Curious",
-    "Silent",
-    "Brave",
-    "Chill",
-    "Smart",
-    "Lucky",
-    "Calm",
-    "Quick",
-    "Clever",
-  ];
-
-  const animals = [
-    "Capybara",
-    "Panda",
-    "Owl",
-    "Fox",
-    "Tiger",
-    "Koala",
-    "Dolphin",
-    "Eagle",
-    "Wolf",
-    "Penguin",
-  ];
-
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  const adj = adjectives[Math.abs(hash) % adjectives.length];
-  const animal = animals[Math.abs(hash * 7) % animals.length];
-
-  return `${adj} ${animal}`;
-}
-
-const assessments = [
-  {
-    title: "Computer Science",
-    code: "CCS",
-    type: "computer-science",
-    image:
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    title: "Education",
-    code: "CEAS",
-    type: "education",
-    image:
-      "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    title: "Health Sciences",
-    code: "CAHS",
-    type: "health-sciences",
-    image:
-      "https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    title: "Business Administration",
-    code: "CBA",
-    type: "business-administration",
-    image:
-      "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=80&w=1200&auto=format&fit=crop",
-  },
-];
-
 export default function DashboardPage({
   user,
   handleLogout,
@@ -78,17 +9,16 @@ export default function DashboardPage({
 }) {
   const [savedResults, setSavedResults] = useState([]);
   const [savedProgress, setSavedProgress] = useState(null);
-  const [showAllAssessments, setShowAllAssessments] = useState(false);
+  const [loadingResults, setLoadingResults] = useState(false);
 
-  const fullName = generateAnonymousName(user?.email || "guest");
+  const fullName = user?.full_name || user?.name || "Student";
   const email = user?.email || "No email";
-
-  const visibleAssessments = showAllAssessments
-    ? assessments
-    : assessments.slice(0, 3);
+  const applicantNumber = user?.applicant_number || "No applicant number";
 
   useEffect(() => {
     if (!user?.id) return;
+
+    setLoadingResults(true);
 
     axios
       .get(
@@ -96,11 +26,14 @@ export default function DashboardPage({
       )
       .then((res) => {
         if (res.data.success) {
-          setSavedResults(res.data.results);
+          setSavedResults(res.data.data?.results || res.data.results || []);
         }
       })
       .catch((err) => {
         console.error("Fetch results error:", err);
+      })
+      .finally(() => {
+        setLoadingResults(false);
       });
 
     const keyPrefix = `assessify_progress_${user.id}_`;
@@ -123,6 +56,36 @@ export default function DashboardPage({
 
     setSavedProgress(latestProgress);
   }, [user]);
+
+  const latestResult = savedResults.length > 0 ? savedResults[0] : null;
+
+  const getTopProgramLabel = (result) => {
+    if (!result) return "No result";
+
+    if (result.top_program?.program_code && result.top_program?.program_name) {
+      return `${result.top_program.program_code} - ${result.top_program.program_name}`;
+    }
+
+    if (result.top_program_name && result.top_program_code) {
+      return `${result.top_program_code} - ${result.top_program_name}`;
+    }
+
+    return "Program recommendation";
+  };
+
+  const getTopPercentage = (result) => {
+    if (!result) return null;
+
+    if (result.recommendations && result.recommendations.length > 0) {
+      return result.recommendations[0].percentage;
+    }
+
+    if (result.percentage) {
+      return result.percentage;
+    }
+
+    return null;
+  };
 
   return (
     <div className="dashboard-page">
@@ -159,22 +122,21 @@ export default function DashboardPage({
                   <h2>Find the best college program for you.</h2>
 
                   <p className="hero-description">
-                    Start with a short guided assessment. Assessify evaluates
-                    your responses using rule-based scoring and presents
-                    recommended programs with explanations.
+                    Start with one guided assessment. Assessify evaluates your
+                    interests, strengths, strand, and goals using rule-based
+                    scoring, then presents your top recommended programs with
+                    explanations.
                   </p>
 
                   <div className="hero-actions">
                     <button
                       className="primary-btn"
-                      onClick={() =>
-                        onStartAssessment("getting-to-know-you")
-                      }
+                      onClick={() => onStartAssessment("main-assessment")}
                     >
                       Start Assessment →
                     </button>
 
-                    <div className="time-pill">Takes 2–3 minutes</div>
+                    <div className="time-pill">Maximum 50 questions</div>
                   </div>
                 </div>
 
@@ -184,7 +146,8 @@ export default function DashboardPage({
                   <div className="how-step">
                     <div className="step-number">1</div>
                     <p>
-                      Answer questions about your interests, strengths, and goals.
+                      Answer questions about your interests, strengths, strand,
+                      and career goals.
                     </p>
                   </div>
 
@@ -199,7 +162,8 @@ export default function DashboardPage({
                   <div className="how-step">
                     <div className="step-number">3</div>
                     <p>
-                      Review your recommended programs with short explanations.
+                      Review your top 3 recommended programs with match
+                      percentages.
                     </p>
                   </div>
                 </div>
@@ -224,9 +188,9 @@ export default function DashboardPage({
 
                     <div className="card-body">
                       <div className="card-top-row">
-                        <h4>{savedProgress.assessmentTitle}</h4>
+                        <h4>{savedProgress.assessmentTitle || "Assessment"}</h4>
                         <span className="progress-badge">
-                          {savedProgress.progressPercent}%
+                          {savedProgress.progressPercent || 0}%
                         </span>
                       </div>
 
@@ -234,7 +198,7 @@ export default function DashboardPage({
                         <div
                           className="progress-fill"
                           style={{
-                            width: `${savedProgress.progressPercent}%`,
+                            width: `${savedProgress.progressPercent || 0}%`,
                           }}
                         ></div>
                       </div>
@@ -242,7 +206,9 @@ export default function DashboardPage({
                       <button
                         className="card-action"
                         onClick={() =>
-                          onStartAssessment(savedProgress.assessmentType)
+                          onStartAssessment(
+                            savedProgress.assessmentType || "main-assessment"
+                          )
                         }
                       >
                         Continue →
@@ -254,7 +220,7 @@ export default function DashboardPage({
                 <div className="results-lock-box">
                   <h4>No unfinished assessment</h4>
                   <p>
-                    Start an assessment, then exit before submitting to continue
+                    Start the assessment, then exit before submitting to continue
                     later.
                   </p>
                 </div>
@@ -263,43 +229,44 @@ export default function DashboardPage({
 
             <section className="dashboard-section">
               <div className="section-header">
-                <h3>Available assessments</h3>
-
-                {assessments.length > 3 && (
-                  <button
-                    className="section-link"
-                    onClick={() =>
-                      setShowAllAssessments(!showAllAssessments)
-                    }
-                  >
-                    {showAllAssessments ? "Show less" : "View all"}
-                  </button>
-                )}
+                <h3>Assessment</h3>
               </div>
 
-              <div className="card-grid three-col">
-                {visibleAssessments.map((item, index) => (
+              <div className="card-grid two-col">
+                <div
+                  className="dashboard-card"
+                  onClick={() => onStartAssessment("main-assessment")}
+                  style={{ cursor: "pointer" }}
+                >
                   <div
-                    className="dashboard-card"
-                    key={index}
-                    onClick={() => onStartAssessment(item.type)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <div
-                      className="card-image"
-                      style={{ backgroundImage: `url(${item.image})` }}
-                    ></div>
+                    className="card-image"
+                    style={{
+                      backgroundImage:
+                        "url(https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop)",
+                    }}
+                  ></div>
 
-                    <div className="card-body assessment-body">
-                      <div>
-                        <h4>{item.title}</h4>
-                        <p>Explore fit</p>
-                      </div>
-
-                      <span className="course-code">{item.code}</span>
+                  <div className="card-body assessment-body">
+                    <div>
+                      <h4>Academic Program Suitability Assessment</h4>
+                      <p>
+                        One guided assessment for incoming Gordon College
+                        students.
+                      </p>
                     </div>
+
+                    <span className="course-code">START</span>
                   </div>
-                ))}
+                </div>
+
+                <div className="results-lock-box">
+                  <h4>Confidentiality Notice</h4>
+                  <p>
+                    Your answers and results are used only for academic program
+                    recommendation purposes. This system does not replace
+                    professional guidance counseling.
+                  </p>
+                </div>
               </div>
             </section>
           </section>
@@ -308,7 +275,9 @@ export default function DashboardPage({
             <div className="profile-card">
               <div className="profile-row">
                 <img
-                  src="https://api.dicebear.com/7.x/adventurer/svg?seed=student"
+                  src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(
+                    fullName
+                  )}`}
                   alt="Profile"
                   className="profile-avatar"
                 />
@@ -316,6 +285,7 @@ export default function DashboardPage({
                 <div className="profile-info">
                   <h3>{fullName}</h3>
                   <p>{email}</p>
+                  <p>{applicantNumber}</p>
                 </div>
               </div>
             </div>
@@ -325,36 +295,64 @@ export default function DashboardPage({
                 <div>
                   <h3>Your Results</h3>
                   <p className="fit-subtitle">
-                    Your latest saved recommendations.
+                    Your latest saved recommendation.
                   </p>
                 </div>
               </div>
 
               <div className="fit-list">
-                {savedResults.length > 0 ? (
-                  savedResults.slice(0, 3).map((item, index) => (
-                    <div className="fit-item" key={index}>
-                      <div className="fit-rank">#{index + 1}</div>
+                {loadingResults ? (
+                  <div className="results-lock-box">
+                    <h4>Loading results...</h4>
+                    <p>Please wait while we fetch your latest result.</p>
+                  </div>
+                ) : latestResult ? (
+                  <>
+                    <div className="fit-item">
+                      <div className="fit-rank">#1</div>
 
                       <div className="fit-text">
-                        <h4>{item.top_program}</h4>
-                        <p>{item.top_reason}</p>
+                        <h4>{getTopProgramLabel(latestResult)}</h4>
+                        <p>
+                          {latestResult.explanation ||
+                            "This is your latest assessment result based on rule-based scoring."}
+                        </p>
 
                         <span className="result-date">
                           Taken on{" "}
-                          {new Date(item.created_at).toLocaleDateString()}
+                          {new Date(
+                            latestResult.created_at
+                          ).toLocaleDateString()}
                         </span>
                       </div>
 
-                      <span className="match-pill match-orange">
-                        {item.top_percentage}% match
-                      </span>
+                      {getTopPercentage(latestResult) !== null && (
+                        <span className="match-pill match-orange">
+                          {getTopPercentage(latestResult)}% match
+                        </span>
+                      )}
                     </div>
-                  ))
+
+                    {latestResult.recommendations &&
+                      latestResult.recommendations.length > 0 && (
+                        <div className="results-lock-box">
+                          <h4>Top 3 Course Matches</h4>
+
+                          {latestResult.recommendations
+                            .slice(0, 3)
+                            .map((item) => (
+                              <p key={item.rank || item.program_id}>
+                                #{item.rank} {item.program_code} -{" "}
+                                {item.percentage}% match
+                              </p>
+                            ))}
+                        </div>
+                      )}
+                  </>
                 ) : (
                   <div className="results-lock-box">
                     <h4>No results yet</h4>
-                    <p>Take an assessment to see your results.</p>
+                    <p>Take the assessment to see your top 3 course matches.</p>
                   </div>
                 )}
               </div>

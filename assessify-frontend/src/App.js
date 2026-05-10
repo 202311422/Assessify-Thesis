@@ -1,12 +1,25 @@
 import { useState } from "react";
-import axios from "axios";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import AssessmentPage from "./pages/AssessmentPage";
 import ResultsPage from "./pages/ResultsPage";
 
-function App() {
+import AdminLayout from "./admin/AdminLayout";
+import AdminDashboard from "./admin/AdminDashboard";
+import Applicants from "./admin/Applicants";
+import Programs from "./admin/Programs";
+import AdminResults from "./admin/Results";
+import Settings from "./admin/Settings";
+
+function StudentApp() {
   const [page, setPage] = useState(() => {
     return localStorage.getItem("user") ? "dashboard" : "login";
   });
@@ -16,8 +29,9 @@ function App() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const [assessmentType, setAssessmentType] = useState("getting-to-know-you");
-  const [assessmentAnswers, setAssessmentAnswers] = useState([]);
+  const [assessmentType, setAssessmentType] = useState("main-assessment");
+  const [latestResultId, setLatestResultId] = useState(null);
+  const [latestResultData, setLatestResultData] = useState(null);
 
   const handleLoginSuccess = (loggedInUser) => {
     localStorage.setItem("user", JSON.stringify(loggedInUser));
@@ -28,56 +42,19 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    setAssessmentAnswers([]);
+    setLatestResultId(null);
+    setLatestResultData(null);
     setPage("login");
   };
 
-  const handleStartAssessment = (type = "getting-to-know-you") => {
+  const handleStartAssessment = (type = "main-assessment") => {
     setAssessmentType(type);
     setPage("assessment");
   };
 
-  const handleAssessmentSubmit = async (assessmentData) => {
-    setAssessmentAnswers(assessmentData);
-
-    const topResult = assessmentData.results?.[0];
-
-    if (!user?.id) {
-      alert("User ID missing. Please log out and log in again.");
-      setPage("results");
-      return;
-    }
-
-    if (!topResult) {
-      alert("No assessment result found.");
-      setPage("results");
-      return;
-    }
-
-    try {
-      const res = await axios.post(
-        "http://localhost/assessify/backend/assessment/save_result.php",
-        {
-          user_id: user.id,
-          assessment_type: assessmentData.assessmentType,
-          assessment_title: assessmentData.assessmentTitle,
-          top_program: topResult.name,
-          top_percentage: topResult.percentage,
-          top_reason: topResult.reason,
-          results: assessmentData.results,
-          formattedAnswers: assessmentData.formattedAnswers,
-          traitScores: assessmentData.traitScores,
-        }
-      );
-
-      if (!res.data.success) {
-        alert(res.data.message || "Assessment save failed.");
-      }
-    } catch (error) {
-      console.error("Save assessment error:", error);
-      alert("Assessment result was calculated, but failed to save to database.");
-    }
-
+  const handleAssessmentSubmit = (submissionResult) => {
+    setLatestResultId(submissionResult?.result_id || null);
+    setLatestResultData(submissionResult || null);
     setPage("results");
   };
 
@@ -100,8 +77,10 @@ function App() {
     return (
       <ResultsPage
         user={user}
-        answers={assessmentAnswers}
+        resultId={latestResultId}
+        resultData={latestResultData}
         setPage={setPage}
+        onRetakeAssessment={() => handleStartAssessment("main-assessment")}
       />
     );
   }
@@ -121,6 +100,29 @@ function App() {
       setPage={setPage}
       onLoginSuccess={handleLoginSuccess}
     />
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="applicants" element={<Applicants />} />
+          <Route path="programs" element={<Programs />} />
+          <Route path="results" element={<AdminResults />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+
+        <Route path="/" element={<StudentApp />} />
+        <Route path="/login" element={<StudentApp />} />
+        <Route path="/register" element={<StudentApp />} />
+        <Route path="/student" element={<StudentApp />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

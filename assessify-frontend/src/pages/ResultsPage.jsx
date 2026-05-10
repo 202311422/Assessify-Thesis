@@ -1,27 +1,116 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import "./ResultsPage.css";
 
-export default function ResultsPage({ user, answers, setPage }) {
+export default function ResultsPage({
+  user,
+  resultId,
+  resultData,
+  setPage,
+  onRetakeAssessment,
+}) {
   const [view, setView] = useState("results");
+  const [result, setResult] = useState(resultData || null);
+  const [loading, setLoading] = useState(!resultData);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const formattedAnswers = answers?.formattedAnswers || [];
-  const results = answers?.results || [];
+  useEffect(() => {
+    if (resultData) {
+      setResult(resultData);
+      setLoading(false);
+      return;
+    }
 
-  const grouped = formattedAnswers.reduce((acc, item) => {
-    const key = item.assessmentTitle || "Assessment";
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
-    return acc;
-  }, {});
+    if (!user?.id && !resultId) {
+      setLoading(false);
+      setErrorMessage("No result found. Please take the assessment first.");
+      return;
+    }
 
-  const topResult = results[0];
-  const otherResults = results.slice(1);
+    const query = resultId ? `result_id=${resultId}` : `user_id=${user.id}`;
 
-  const getFitLabel = (percentage) => {
-    if (percentage >= 70) return "Strong Fit";
-    if (percentage >= 40) return "Moderate Fit";
-    return "Low Fit";
+    setLoading(true);
+    setErrorMessage("");
+
+    axios
+      .get(`http://localhost/assessify/backend/assessment/get_result.php?${query}`)
+      .then((res) => {
+        if (res.data.success) {
+          setResult(res.data.data?.result || res.data.result || null);
+        } else {
+          setErrorMessage(res.data.message || "Failed to load result.");
+        }
+      })
+      .catch((err) => {
+        console.error("Load result error:", err);
+        setErrorMessage("Unable to load assessment result.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [resultData, resultId, user]);
+
+  const recommendations = result?.recommendations || [];
+
+  const topProgram =
+    result?.top_program ||
+    result?.topProgram ||
+    (recommendations.length > 0 ? recommendations[0] : null);
+
+  const topPercentage =
+    recommendations.length > 0
+      ? recommendations[0].percentage
+      : topProgram?.percentage || result?.top_program?.percentage || null;
+
+  const getMatchLabel = (percentage) => {
+  if (percentage >= 80) return "Highly Recommended";
+  if (percentage >= 60) return "Recommended";
+  return "Top Recommendation";
+};
+
+  const getProgramName = (program) => {
+    if (!program) return "No program available";
+
+    if (program.program_code && program.program_name) {
+      return `${program.program_code} - ${program.program_name}`;
+    }
+
+    return program.program_name || program.name || "Program recommendation";
   };
+
+  if (loading) {
+    return (
+      <div className="results-page">
+        <div className="results-container">
+          <div className="results-header">
+            <p className="results-user">Student: {user?.full_name}</p>
+            <h1>Loading Results...</h1>
+            <p className="results-subtitle">
+              Please wait while Assessify loads your recommendation.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="results-page">
+        <div className="results-container">
+          <div className="results-header">
+            <p className="results-user">Student: {user?.full_name}</p>
+            <h1>Assessment Results</h1>
+            <p className="results-subtitle">{errorMessage}</p>
+
+            <button className="continue-btn" onClick={() => setPage("dashboard")}>
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="results-page">
@@ -30,7 +119,7 @@ export default function ResultsPage({ user, answers, setPage }) {
           <p className="results-user">Student: {user?.full_name}</p>
           <h1>Assessment Results</h1>
           <p className="results-subtitle">
-            Based on your responses, here’s your best academic program match.
+            Based on your responses, here are your top academic program matches.
           </p>
 
           <div className="view-toggle">
@@ -42,10 +131,10 @@ export default function ResultsPage({ user, answers, setPage }) {
             </button>
 
             <button
-              className={view === "answers" ? "active" : ""}
-              onClick={() => setView("answers")}
+              className={view === "details" ? "active" : ""}
+              onClick={() => setView("details")}
             >
-              My Answers
+              Details
             </button>
           </div>
         </div>
@@ -53,22 +142,26 @@ export default function ResultsPage({ user, answers, setPage }) {
         {view === "results" && (
           <div className="result-flex">
             <div className="result-main">
-              {topResult ? (
+              {topProgram ? (
                 <>
-                  <p className="result-label">Your Result</p>
+                  <p className="result-label">Your Top Match</p>
 
                   <div className="result-circle">
-                    <span>{topResult.percentage}</span>
-                    <small>/ 100</small>
+                    <span>{topPercentage ?? 0}</span>
+                    <small>%</small>
                   </div>
 
                   <h2 className="result-status">
-                    {getFitLabel(topResult.percentage)}
+                    {getMatchLabel(Number(topPercentage || 0))}
                   </h2>
 
-                  <h3 className="result-program">{topResult.name}</h3>
+                  <h3 className="result-program">{getProgramName(topProgram)}</h3>
 
-                  <p className="result-desc">{topResult.reason}</p>
+                  <p className="result-desc">
+                    {result?.explanation ||
+                      topProgram?.description ||
+                      "This recommendation was generated using Assessify's rule-based scoring engine."}
+                  </p>
                 </>
               ) : (
                 <p>No assessment results available.</p>
@@ -76,15 +169,18 @@ export default function ResultsPage({ user, answers, setPage }) {
             </div>
 
             <div className="result-summary">
-              <h3>Program Matches</h3>
+              <h3>Top 3 Program Matches</h3>
 
-              {otherResults.length === 0 ? (
-                <p className="empty-text">No other program matches available.</p>
+              {recommendations.length === 0 ? (
+                <p className="empty-text">No program matches available.</p>
               ) : (
-                otherResults.map((item, index) => (
-                  <div className="summary-item" key={index}>
+                recommendations.slice(0, 3).map((item, index) => (
+                  <div className="summary-item" key={item.program_id || index}>
                     <div className="summary-top">
-                      <span>{item.name}</span>
+                      <span>
+                        #{item.rank || index + 1} {item.program_code} -{" "}
+                        {item.program_name}
+                      </span>
                       <small>{item.percentage}%</small>
                     </div>
 
@@ -102,74 +198,92 @@ export default function ResultsPage({ user, answers, setPage }) {
                 className="continue-btn"
                 onClick={() => setPage("dashboard")}
               >
-                Continue
+                Back to Dashboard
+              </button>
+
+              <button
+                className="continue-btn"
+                onClick={onRetakeAssessment}
+                style={{ marginTop: "10px" }}
+              >
+                Retake Assessment
               </button>
             </div>
           </div>
         )}
 
-        {view === "answers" && (
+        {view === "details" && (
           <div className="results-card">
             <div className="answers-title-row">
               <div>
-                <h2>Your Profile Insights</h2>
+                <h2>Result Details</h2>
                 <p>
-                  This section summarizes your submitted answers and helps explain
-                  how your profile was formed.
+                  This section shows the summary of your latest assessment result.
                 </p>
               </div>
             </div>
 
-            {formattedAnswers.length === 0 ? (
-              <p>No answers submitted yet.</p>
-            ) : (
-              <>
-                <div className="insight-summary">
-                  <div className="insight-icon">AI</div>
+            <div className="insight-summary">
+              <div className="insight-icon">AI</div>
 
-                  <div>
-                    <h3>Response Summary</h3>
-                    <ul>
-                      <li>
-                        You showed interest in{" "}
-                        <strong>{formattedAnswers[0]?.answer || "your selected subject"}</strong>.
-                      </li>
-                      <li>
-                        You described yourself as{" "}
-                        <strong>{formattedAnswers[1]?.answer || "your chosen personality type"}</strong>.
-                      </li>
-                      <li>
-                        You prefer activities related to{" "}
-                        <strong>{formattedAnswers[2]?.answer || "your selected activity"}</strong>.
-                      </li>
-                      <li>
-                        Your preferred environment is{" "}
-                        <strong>{formattedAnswers[3]?.answer || "your selected environment"}</strong>.
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+              <div>
+                <h3>Recommendation Explanation</h3>
+                <p>
+                  {result?.explanation ||
+                    "Your result was calculated using the system's rule-based scoring engine."}
+                </p>
 
-                <div className="answers-list">
-                  {Object.keys(grouped).map((groupName) => (
-                    <div className="answer-group" key={groupName}>
-                      <h3 className="answer-group-title">{groupName}</h3>
+                <ul>
+  <li>
+    Strand: <strong>{result?.strand || "No strand selected"}</strong>
+  </li>
+  <li>
+    Top Match:{" "}
+    <strong>
+      {topProgram?.program_code && topProgram?.program_name
+        ? `${topProgram.program_code} - ${topProgram.program_name}`
+        : "No top match available"}
+    </strong>
+  </li>
+  <li>
+    Match Percentage:{" "}
+    <strong>{topPercentage ?? 0}%</strong>
+  </li>
+  <li>
+    Assessment Type:{" "}
+    <strong>Academic Program Suitability Assessment</strong>
+  </li>
+</ul>
+              </div>
+            </div>
 
-                      {grouped[groupName].map((item, index) => (
-                        <div className="answer-item enhanced" key={index}>
-                          <div className="answer-header">
-                            <span className="question-tag">Q{index + 1}</span>
-                            <h4>{item.question}</h4>
-                          </div>
+            <div className="answers-list">
+              <div className="answer-group">
+                <h3 className="answer-group-title">Course Matches</h3>
 
-                          <div className="answer-pill">{item.answer}</div>
-                        </div>
-                      ))}
+                {recommendations.slice(0, 3).map((item, index) => (
+                  <div className="answer-item enhanced" key={item.program_id || index}>
+                    <div className="answer-header">
+                      <span className="question-tag">#{item.rank || index + 1}</span>
+                      <h4>
+                        {item.program_code} - {item.program_name}
+                      </h4>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
+
+                    <div className="answer-pill">{item.percentage}% match</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="results-card" style={{ marginTop: "18px" }}>
+              <h3>Confidentiality Notice</h3>
+              <p>
+                Your answers and results are used only for academic program
+                recommendation purposes. Assessify does not replace professional
+                guidance counseling services.
+              </p>
+            </div>
           </div>
         )}
       </div>

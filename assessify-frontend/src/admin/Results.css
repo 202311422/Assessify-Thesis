@@ -1,0 +1,25 @@
+.page {
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.btn-view-result {
+  padding: 6px 14px;
+  background: #478745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.btn-view-result:hover {
+  background: #356734;
+}

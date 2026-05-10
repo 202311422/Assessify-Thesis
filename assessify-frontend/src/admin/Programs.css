@@ -1,0 +1,141 @@
+.page {
+  padding: 20px;
+}
+
+/* HEADER */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.add-btn {
+  background: #478745;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  background: #356734;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+/* CARD */
+.program-card {
+  position: relative;
+  /* KEY FIX */
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  min-height: 200px;
+  /* consistent height */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* CONTENT */
+.program-content {
+  padding-bottom: 50px;
+  /* space for button */
+}
+
+.program-content h3 {
+  margin-bottom: 5px;
+}
+
+.applicants {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.desc {
+  font-size: 14px;
+  color: #555;
+}
+
+/* ✅ FIXED BUTTON */
+.view-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+
+  background: #478745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.view-btn:hover {
+  background: #356734;
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 320px;
+}
+
+.close-btn {
+  margin-top: 15px;
+  background: #478745;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ADD FORM */
+.add-form {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-form label {
+  font-size: 14px;
+  margin-bottom: 5px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.add-form input,
+.add-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}

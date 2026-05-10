@@ -1,17 +1,39 @@
 import { useState } from "react";
 import axios from "axios";
-import "./LoginPage.css"; // reuse same design
+import "./LoginPage.css";
 
 export default function RegisterPage({ setPage }) {
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleRegister = async () => {
+    if (!firstName.trim()) {
+      alert("Please enter your first name.");
+      return;
+    }
+
+    if (!lastName.trim()) {
+      alert("Please enter your last name.");
+      return;
+    }
+
+    if (!email.trim()) {
+      alert("Please enter your email.");
+      return;
+    }
+
+    if (!password.trim()) {
+      alert("Please enter your password.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       alert("Passwords do not match.");
       return;
@@ -21,9 +43,11 @@ export default function RegisterPage({ setPage }) {
       const res = await axios.post(
         "http://localhost/assessify/backend/auth/register.php",
         {
-          full_name: email, // TEMP (you can add full name later)
+          first_name: firstName,
+          middle_name: middleName,
+          last_name: lastName,
           email,
-          password
+          password,
         }
       );
 
@@ -46,6 +70,36 @@ export default function RegisterPage({ setPage }) {
           <p className="subtitle">Welcome! Please enter your details.</p>
 
           <div className="form-group">
+            <label>First Name</label>
+            <input
+              type="text"
+              placeholder="Enter your first name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Middle Name / Initial</label>
+            <input
+              type="text"
+              placeholder="Enter your middle name or initial"
+              value={middleName}
+              onChange={(e) => setMiddleName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Last Name</label>
+            <input
+              type="text"
+              placeholder="Enter your last name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
             <label>Email</label>
             <input
               type="email"
@@ -55,7 +109,6 @@ export default function RegisterPage({ setPage }) {
             />
           </div>
 
-          {/* PASSWORD */}
           <div className="form-group">
             <label>Password</label>
             <div className="password-wrapper">
@@ -79,9 +132,8 @@ export default function RegisterPage({ setPage }) {
             </div>
           </div>
 
-          {/* CONFIRM PASSWORD */}
           <div className="form-group">
-            <label>Re enter Password</label>
+            <label>Re-enter Password</label>
             <div className="password-wrapper">
               <input
                 type={showConfirm ? "text" : "password"}
@@ -103,17 +155,6 @@ export default function RegisterPage({ setPage }) {
             </div>
           </div>
 
-          <div className="login-options">
-            <label className="remember-box">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <span>Remember me</span>
-            </label>
-          </div>
-
           <button className="sign-in-btn" onClick={handleRegister}>
             Sign up
           </button>
@@ -125,10 +166,7 @@ export default function RegisterPage({ setPage }) {
 
           <p className="signup-text">
             Already have an account?{" "}
-            <button
-              className="signup-link"
-              onClick={() => setPage("login")}
-            >
+            <button className="signup-link" onClick={() => setPage("login")}>
               Sign in
             </button>
           </p>

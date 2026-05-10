@@ -112,15 +112,26 @@
 }
 
 .logout-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  color: white;
-  padding: 8px 14px;
+  border: none;
+  background: #ffffff;
+  color: #005d24;
+  padding: 12px 24px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
   transition: 0.2s ease;
+  box-shadow: 0 12px 24px rgba(0, 93, 36, 0.18);
+}
+
+.logout-btn:hover {
+  background: #f4fff7;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(0, 93, 36, 0.24);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
 }
 
 .logout-btn:hover {
@@ -772,4 +783,292 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+/* STUDENT LOGOUT CONFIRMATION MODAL */
+.student-logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 45, 26, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.student-logout-modal {
+  width: min(420px, 92%);
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 18px 45px rgba(26, 45, 26, 0.18);
+  border: 1px solid #e0e8e0;
+  animation: studentLogoutModalPop 0.2s ease;
+}
+
+.student-logout-modal-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  background: #eaf4ea;
+  color: #478745;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.student-logout-modal h2 {
+  font-size: 22px;
+  color: #1a2d1a;
+  margin-bottom: 10px;
+}
+
+.student-logout-modal p {
+  color: #5a7059;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.student-logout-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.student-logout-cancel-btn,
+.student-logout-confirm-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.student-logout-cancel-btn {
+  background: #eaf4ea;
+  color: #478745;
+}
+
+.student-logout-cancel-btn:hover {
+  background: #dcefdc;
+}
+
+.student-logout-confirm-btn {
+  background: #ff4d4f;
+  color: white;
+}
+
+.student-logout-confirm-btn:hover {
+  background: #e04345;
+  transform: translateY(-1px);
+}
+
+@keyframes studentLogoutModalPop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.student-logout-btn {
+  border: none;
+  background: #ffffff;
+  color: #005d24;
+  padding: 12px 26px;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 12px 25px rgba(0, 93, 36, 0.18);
+}
+
+.student-logout-btn:hover {
+  background: #f7fff9;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(0, 93, 36, 0.25);
+}
+
+.student-logout-btn:active {
+  transform: translateY(0);
+}
+/* CLEAN DASHBOARD RESULTS CARD */
+.latest-result-card {
+  background: #fffdf2;
+  border: 1px solid rgba(244, 211, 94, 0.75);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 12px 26px rgba(0, 93, 36, 0.08);
+}
+
+.latest-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.latest-result-label {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #007a35;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.latest-result-header h4 {
+  color: #07142b;
+  font-size: 17px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.latest-match-badge {
+  flex-shrink: 0;
+  background: #fff4bf;
+  color: #8a6500;
+  border: 1px solid rgba(244, 211, 94, 0.9);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.latest-result-explanation {
+  color: #4f5f5a;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+
+.latest-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.latest-result-meta span {
+  background: #ffffff;
+  color: #264333;
+  border: 1px solid #e3eee5;
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-size: 12px;
+}
+
+.top-matches-card {
+  margin-top: 18px;
+  background: #003f19;
+  border-radius: 18px;
+  padding: 18px;
+  color: white;
+  box-shadow: 0 12px 26px rgba(0, 63, 25, 0.18);
+}
+
+.top-matches-card h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.top-match-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 14px;
+}
+
+.top-match-row:last-child {
+  border-bottom: none;
+}
+
+.top-match-row div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-match-rank {
+  background: #007a35;
+  color: white;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+.top-match-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.top-match-row:last-child {
+  border-bottom: none;
+}
+
+.top-match-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.top-match-rank {
+  background: #007a35;
+  color: white;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.top-match-info {
+  min-width: 0;
+}
+
+.top-match-info strong {
+  display: block;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.top-match-info p {
+  margin: 3px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.top-match-percent {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff4bf;
+  border: 1px solid rgba(244, 211, 94, 0.35);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 900;
 }

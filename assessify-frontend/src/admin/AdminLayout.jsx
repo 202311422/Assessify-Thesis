@@ -1,31 +1,15 @@
 import React, { useState } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import "./AdminLayout.css";
 
 const AdminLayout = () => {
   const location = useLocation();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate();
 
-  const [programs, setPrograms] = useState([
-    {
-      name: "BS Computer Science",
-      applicants: 40,
-      description:
-        "Focuses on programming, artificial intelligence, and software development. Ideal for students who enjoy problem-solving and building systems.",
-    },
-    {
-      name: "BS Information Technology",
-      applicants: 35,
-      description:
-        "Covers networking, system administration, and web development with practical industry applications.",
-    },
-    {
-      name: "BS Accountancy",
-      applicants: 25,
-      description:
-        "Deals with financial reporting, auditing, and business management principles with strong analytical focus.",
-    },
-  ]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const admin = JSON.parse(localStorage.getItem("admin") || "{}");
 
   const menu = [
     { name: "Dashboard", path: "/admin" },
@@ -35,14 +19,23 @@ const AdminLayout = () => {
     { name: "Settings", path: "/admin/settings" },
   ];
 
-  const handleLogout = () => {
-    alert("Logged out"); // replace with real logout logic
+  const handleLogoutClick = () => {
+    setShowDropdown(false);
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem("admin");
+    setShowLogoutModal(false);
+    navigate("/admin/login", { replace: true });
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   return (
     <div className="admin-container">
-
-      {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="sidebar-top">
           <h2 className="logo">ASSESSIFY</h2>
@@ -59,38 +52,69 @@ const AdminLayout = () => {
           </ul>
         </div>
 
-        {/* LOGOUT BUTTON */}
         <div className="sidebar-bottom">
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className="logout-btn" onClick={handleLogoutClick}>
             Logout
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
       <div className="main-content">
         <header className="top-bar">
           <h1>Admin Panel</h1>
 
           <div className="user" style={{ position: "relative" }}>
-            <span 
+            <span
               className="admin-name"
               onClick={() => setShowDropdown(!showDropdown)}
             >
-              Admin ▼
+              {admin?.full_name || "Admin"} ▼
             </span>
 
             {showDropdown && (
               <div className="admin-dropdown">
-                <Link to="/admin/settings" onClick={() => setShowDropdown(false)}>Settings</Link>
-                <button onClick={handleLogout}>Logout</button>
+                <Link
+                  to="/admin/settings"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  Settings
+                </Link>
+
+                <button type="button" onClick={handleLogoutClick}>
+                  Logout
+                </button>
               </div>
             )}
           </div>
         </header>
 
-        <Outlet context={{ programs, setPrograms }} />
+        <Outlet />
       </div>
+
+      {showLogoutModal && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal">
+            <div className="logout-modal-icon">!</div>
+
+            <h2>Log out of admin panel?</h2>
+
+            <p>
+              Are you sure you want to log out? You will need to sign in again
+              to access the admin dashboard.
+            </p>
+
+            <div className="logout-modal-actions">
+              <button className="logout-cancel-btn" onClick={cancelLogout}>
+                Cancel
+              </button>
+
+              <button className="logout-confirm-btn" onClick={confirmLogout}>
+                Yes, log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

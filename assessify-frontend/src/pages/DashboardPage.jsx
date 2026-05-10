@@ -10,6 +10,7 @@ export default function DashboardPage({
   const [savedResults, setSavedResults] = useState([]);
   const [savedProgress, setSavedProgress] = useState(null);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fullName = user?.full_name || user?.name || "Student";
   const email = user?.email || "No email";
@@ -87,6 +88,19 @@ export default function DashboardPage({
     return null;
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    handleLogout();
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
+  };
+
   return (
     <div className="dashboard-page">
       <header className="dashboard-topbar">
@@ -105,7 +119,7 @@ export default function DashboardPage({
             Student Dashboard
           </div>
 
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className="student-logout-btn" onClick={handleLogoutClick}>
             Logout
           </button>
         </div>
@@ -308,44 +322,68 @@ export default function DashboardPage({
                   </div>
                 ) : latestResult ? (
                   <>
-                    <div className="fit-item">
-                      <div className="fit-rank">#1</div>
+                    <div className="latest-result-card">
+                      <div className="latest-result-header">
+                        <div>
+                          <span className="latest-result-label">
+                            Latest Recommendation
+                          </span>
+                          <h4>{getTopProgramLabel(latestResult)}</h4>
+                        </div>
 
-                      <div className="fit-text">
-                        <h4>{getTopProgramLabel(latestResult)}</h4>
-                        <p>
-                          {latestResult.explanation ||
-                            "This is your latest assessment result based on rule-based scoring."}
-                        </p>
-
-                        <span className="result-date">
-                          Taken on{" "}
-                          {new Date(
-                            latestResult.created_at
-                          ).toLocaleDateString()}
-                        </span>
+                        {getTopPercentage(latestResult) !== null && (
+                          <span className="latest-match-badge">
+                            {getTopPercentage(latestResult)}% match
+                          </span>
+                        )}
                       </div>
 
-                      {getTopPercentage(latestResult) !== null && (
-                        <span className="match-pill match-orange">
-                          {getTopPercentage(latestResult)}% match
+                      <p className="latest-result-explanation">
+                        {latestResult.explanation ||
+                          "This recommendation was generated based on your assessment answers using Assessify's rule-based scoring engine."}
+                      </p>
+
+                      <div className="latest-result-meta">
+                        <span>
+                          <strong>Strand:</strong>{" "}
+                          {latestResult.strand || "No strand"}
                         </span>
-                      )}
+
+                        <span>
+                          <strong>Taken:</strong>{" "}
+                          {latestResult.created_at
+                            ? new Date(
+                                latestResult.created_at
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </span>
+                      </div>
                     </div>
 
                     {latestResult.recommendations &&
                       latestResult.recommendations.length > 0 && (
-                        <div className="results-lock-box">
+                        <div className="top-matches-card">
                           <h4>Top 3 Course Matches</h4>
 
                           {latestResult.recommendations
-                            .slice(0, 3)
-                            .map((item) => (
-                              <p key={item.rank || item.program_id}>
-                                #{item.rank} {item.program_code} -{" "}
-                                {item.percentage}% match
-                              </p>
-                            ))}
+  .slice(0, 3)
+  .map((item) => (
+    <div
+      className="top-match-row"
+      key={item.rank || item.program_id}
+    >
+      <div className="top-match-left">
+        <span className="top-match-rank">#{item.rank}</span>
+
+        <div className="top-match-info">
+          <strong>{item.program_code}</strong>
+          <p>{item.program_name || "Program name unavailable"}</p>
+        </div>
+      </div>
+
+      <span className="top-match-percent">{item.percentage}%</span>
+    </div>
+  ))}
                         </div>
                       )}
                   </>
@@ -360,6 +398,37 @@ export default function DashboardPage({
           </aside>
         </div>
       </main>
+
+      {showLogoutModal && (
+        <div className="student-logout-modal-overlay">
+          <div className="student-logout-modal">
+            <div className="student-logout-modal-icon">!</div>
+
+            <h2>Log out of Assessify?</h2>
+
+            <p>
+              Are you sure you want to log out? You will need to sign in again
+              to continue your assessment or view your results.
+            </p>
+
+            <div className="student-logout-modal-actions">
+              <button
+                className="student-logout-cancel-btn"
+                onClick={cancelLogout}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="student-logout-confirm-btn"
+                onClick={confirmLogout}
+              >
+                Yes, log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

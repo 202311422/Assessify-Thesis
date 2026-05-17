@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 require_once __DIR__ . "/../utils/cors.php";
 require_once __DIR__ . "/../config/db.php";
 require_once __DIR__ . "/../utils/response.php";
@@ -18,11 +20,18 @@ if ($email === "" || $password === "") {
 
 try {
     $stmt = $pdo->prepare("
-        SELECT id, full_name, email, password, role, is_active
+        SELECT 
+            id, 
+            full_name, 
+            email, 
+            password, 
+            role, 
+            is_active
         FROM admins
         WHERE email = ?
         LIMIT 1
     ");
+
     $stmt->execute([$email]);
     $admin = $stmt->fetch();
 
@@ -38,10 +47,21 @@ try {
         sendResponse(false, "Invalid email or password.", null, 401);
     }
 
+    $_SESSION["admin_id"] = $admin["id"];
+    $_SESSION["admin_full_name"] = $admin["full_name"];
+    $_SESSION["admin_email"] = $admin["email"];
+    $_SESSION["admin_role"] = $admin["role"];
+    $_SESSION["role"] = "admin";
+
     unset($admin["password"]);
 
     sendResponse(true, "Admin login successful.", [
-        "admin" => $admin
+        "admin" => [
+            "id" => $admin["id"],
+            "full_name" => $admin["full_name"],
+            "email" => $admin["email"],
+            "role" => $admin["role"]
+        ]
     ]);
 
 } catch (Exception $e) {

@@ -13,35 +13,35 @@ try {
         FROM users
         WHERE is_active = 1
     ");
-    $totalStudents = $studentsStmt->fetch()["total_students"];
+    $totalStudents = (int)$studentsStmt->fetch()["total_students"];
 
     $programsStmt = $pdo->query("
         SELECT COUNT(*) AS total_programs
         FROM programs
         WHERE is_active = 1
     ");
-    $totalPrograms = $programsStmt->fetch()["total_programs"];
+    $totalPrograms = (int)$programsStmt->fetch()["total_programs"];
 
     $questionsStmt = $pdo->query("
         SELECT COUNT(*) AS total_questions
         FROM assessment_questions
         WHERE is_active = 1
     ");
-    $totalQuestions = $questionsStmt->fetch()["total_questions"];
+    $totalQuestions = (int)$questionsStmt->fetch()["total_questions"];
 
     $completedStmt = $pdo->query("
         SELECT COUNT(*) AS completed_assessments
         FROM assessment_sessions
         WHERE status = 'completed'
     ");
-    $completedAssessments = $completedStmt->fetch()["completed_assessments"];
+    $completedAssessments = (int)$completedStmt->fetch()["completed_assessments"];
 
     $studentsTakenStmt = $pdo->query("
         SELECT COUNT(DISTINCT user_id) AS students_taken
         FROM assessment_sessions
         WHERE status = 'completed'
     ");
-    $studentsTaken = $studentsTakenStmt->fetch()["students_taken"];
+    $studentsTaken = (int)$studentsTakenStmt->fetch()["students_taken"];
 
     $mostRecommendedStmt = $pdo->query("
         SELECT 
@@ -55,6 +55,10 @@ try {
         LIMIT 1
     ");
     $mostRecommended = $mostRecommendedStmt->fetch();
+
+    if ($mostRecommended) {
+        $mostRecommended["recommendation_count"] = (int)$mostRecommended["recommendation_count"];
+    }
 
     $recentResultsStmt = $pdo->query("
         SELECT
@@ -79,6 +83,12 @@ try {
     ");
     $recentResults = $recentResultsStmt->fetchAll();
 
+    foreach ($recentResults as &$result) {
+        $result["result_id"] = (int)$result["result_id"];
+        $result["percentage"] = $result["percentage"] !== null ? (float)$result["percentage"] : null;
+    }
+    unset($result);
+
     $programDistributionStmt = $pdo->query("
         SELECT
             p.program_code,
@@ -92,13 +102,18 @@ try {
     ");
     $programDistribution = $programDistributionStmt->fetchAll();
 
+    foreach ($programDistribution as &$program) {
+        $program["total"] = (int)$program["total"];
+    }
+    unset($program);
+
     sendResponse(true, "Dashboard statistics loaded successfully.", [
         "cards" => [
-            "total_students" => (int)$totalStudents,
-            "total_programs" => (int)$totalPrograms,
-            "total_questions" => (int)$totalQuestions,
-            "completed_assessments" => (int)$completedAssessments,
-            "students_taken" => (int)$studentsTaken
+            "total_students" => $totalStudents,
+            "total_programs" => $totalPrograms,
+            "total_questions" => $totalQuestions,
+            "completed_assessments" => $completedAssessments,
+            "students_taken" => $studentsTaken
         ],
         "most_recommended_program" => $mostRecommended ?: null,
         "recent_results" => $recentResults,

@@ -1,6 +1,8 @@
 <?php
 session_start();
+
 require_once "../utils/cors.php";
+require_once "../utils/response.php";
 require_once "../config/db.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
@@ -9,11 +11,7 @@ $email = trim($data["email"] ?? "");
 $user_password = trim($data["password"] ?? "");
 
 if (empty($email) || empty($user_password)) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Email and password are required."
-    ]);
-    exit();
+    sendResponse(false, "Email and password are required.", null, 400);
 }
 
 try {
@@ -37,27 +35,15 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Invalid email or password."
-        ]);
-        exit();
+        sendResponse(false, "Invalid email or password.", null, 401);
     }
 
     if ((int)$user["is_active"] !== 1) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Your account is inactive. Please contact the administrator."
-        ]);
-        exit();
+        sendResponse(false, "Your account is inactive. Please contact the administrator.", null, 403);
     }
 
     if (!password_verify($user_password, $user["password"])) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Invalid email or password."
-        ]);
-        exit();
+        sendResponse(false, "Invalid email or password.", null, 401);
     }
 
     $_SESSION["user_id"] = $user["id"];
@@ -68,9 +54,7 @@ try {
     $_SESSION["email"] = $user["email"];
     $_SESSION["role"] = "student";
 
-    echo json_encode([
-        "success" => true,
-        "message" => "Login successful.",
+    sendResponse(true, "Login successful.", [
         "user" => [
             "id" => $user["id"],
             "first_name" => $user["first_name"],
@@ -84,10 +68,6 @@ try {
     ]);
 
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        "success" => false,
-        "message" => "Login failed: " . $e->getMessage()
-    ]);
+    sendResponse(false, "Login failed: " . $e->getMessage(), null, 500);
 }
 ?>

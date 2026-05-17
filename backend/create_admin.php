@@ -3,13 +3,22 @@ require_once __DIR__ . "/utils/cors.php";
 require_once __DIR__ . "/config/db.php";
 require_once __DIR__ . "/utils/response.php";
 
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    sendResponse(false, "Invalid request method. Use POST to create an admin account.", null, 405);
+}
+
 try {
     $fullName = "Assessify Admin";
     $email = "admin@assessify.com";
     $plainPassword = "admin123";
     $role = "super_admin";
 
-    $checkStmt = $pdo->prepare("SELECT id FROM admins WHERE email = ?");
+    $checkStmt = $pdo->prepare("
+        SELECT id 
+        FROM admins 
+        WHERE email = ?
+        LIMIT 1
+    ");
     $checkStmt->execute([$email]);
 
     if ($checkStmt->fetch()) {
@@ -21,8 +30,15 @@ try {
     $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
 
     $stmt = $pdo->prepare("
-        INSERT INTO admins (full_name, email, password, role)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO admins 
+        (
+            full_name, 
+            email, 
+            password, 
+            role,
+            is_active
+        )
+        VALUES (?, ?, ?, ?, 1)
     ");
 
     $stmt->execute([

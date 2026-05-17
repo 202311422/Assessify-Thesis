@@ -9,7 +9,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" && $_SERVER["REQUEST_METHOD"] !== "DEL
 
 $input = json_decode(file_get_contents("php://input"), true);
 
-$id = $input["id"] ?? null;
+$id = isset($input["id"]) ? (int)$input["id"] : null;
 
 if (!$id) {
     sendResponse(false, "Program ID is required.", null, 400);
@@ -17,7 +17,11 @@ if (!$id) {
 
 try {
     $checkStmt = $pdo->prepare("
-        SELECT id, program_code
+        SELECT 
+            id, 
+            program_code,
+            program_name,
+            is_active
         FROM programs
         WHERE id = ?
         LIMIT 1
@@ -29,6 +33,17 @@ try {
         sendResponse(false, "Program not found.", null, 404);
     }
 
+    if ((int)$program["is_active"] === 0) {
+        sendResponse(false, "Program is already deactivated.", [
+            "program" => [
+                "id" => (int)$program["id"],
+                "program_code" => $program["program_code"],
+                "program_name" => $program["program_name"],
+                "is_active" => 0
+            ]
+        ], 409);
+    }
+
     $stmt = $pdo->prepare("
         UPDATE programs
         SET is_active = 0
@@ -37,8 +52,12 @@ try {
     $stmt->execute([$id]);
 
     sendResponse(true, "Program deactivated successfully.", [
-        "program_id" => $id,
-        "program_code" => $program["program_code"]
+        "program" => [
+            "id" => (int)$program["id"],
+            "program_code" => $program["program_code"],
+            "program_name" => $program["program_name"],
+            "is_active" => 0
+        ]
     ]);
 
 } catch (Exception $e) {

@@ -25,6 +25,12 @@ try {
 
     $programs = $stmt->fetchAll();
 
+    foreach ($programs as &$program) {
+        $program["id"] = (int)$program["id"];
+        $program["is_active"] = (int)$program["is_active"];
+    }
+    unset($program);
+
     sendResponse(true, "Programs loaded successfully.", [
         "programs" => $programs,
         "total_programs" => count($programs)

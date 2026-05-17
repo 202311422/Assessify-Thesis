@@ -9,7 +9,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST" && $_SERVER["REQUEST_METHOD"] !== "PUT
 
 $input = json_decode(file_get_contents("php://input"), true);
 
-$id = $input["id"] ?? null;
+$id = isset($input["id"]) ? (int)$input["id"] : null;
 $programCode = strtoupper(trim($input["program_code"] ?? ""));
 $programName = trim($input["program_name"] ?? "");
 $description = trim($input["description"] ?? "");
@@ -23,6 +23,8 @@ if (!$id) {
 if ($programCode === "" || $programName === "") {
     sendResponse(false, "Program code and program name are required.", null, 400);
 }
+
+$isActive = $isActive === 1 ? 1 : 0;
 
 try {
     $checkProgramStmt = $pdo->prepare("
@@ -71,7 +73,14 @@ try {
     ]);
 
     sendResponse(true, "Program updated successfully.", [
-        "program_id" => $id
+        "program" => [
+            "id" => $id,
+            "program_code" => $programCode,
+            "program_name" => $programName,
+            "description" => $description !== "" ? $description : null,
+            "college_department" => $collegeDepartment !== "" ? $collegeDepartment : null,
+            "is_active" => $isActive
+        ]
     ]);
 
 } catch (Exception $e) {

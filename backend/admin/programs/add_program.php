@@ -33,8 +33,14 @@ try {
 
     $stmt = $pdo->prepare("
         INSERT INTO programs 
-        (program_code, program_name, description, college_department)
-        VALUES (?, ?, ?, ?)
+        (
+            program_code, 
+            program_name, 
+            description, 
+            college_department,
+            is_active
+        )
+        VALUES (?, ?, ?, ?, 1)
     ");
 
     $stmt->execute([
@@ -44,8 +50,17 @@ try {
         $collegeDepartment !== "" ? $collegeDepartment : null
     ]);
 
+    $programId = (int)$pdo->lastInsertId();
+
     sendResponse(true, "Program added successfully.", [
-        "program_id" => $pdo->lastInsertId()
+        "program" => [
+            "id" => $programId,
+            "program_code" => $programCode,
+            "program_name" => $programName,
+            "description" => $description !== "" ? $description : null,
+            "college_department" => $collegeDepartment !== "" ? $collegeDepartment : null,
+            "is_active" => 1
+        ]
     ], 201);
 
 } catch (Exception $e) {

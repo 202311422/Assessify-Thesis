@@ -52,21 +52,35 @@ export default function ResultsPage({
 
   const recommendations = result?.recommendations || [];
 
+  const getPercentage = (program) => {
+  if (!program) return 0;
+
+  const totalScore = Number(program.total_score || 0);
+
+  if (totalScore > 0) {
+    return Math.round((totalScore / 15) * 100);
+  }
+
+  return Number(
+    program.match_percentage ??
+      program.percentage ??
+      program.matchPercentage ??
+      0
+  );
+};
+
   const topProgram =
     result?.top_program ||
     result?.topProgram ||
     (recommendations.length > 0 ? recommendations[0] : null);
 
-  const topPercentage =
-    recommendations.length > 0
-      ? recommendations[0].percentage
-      : topProgram?.percentage || result?.top_program?.percentage || null;
+  const topPercentage = getPercentage(topProgram);
 
   const getMatchLabel = (percentage) => {
-  if (percentage >= 80) return "Highly Recommended";
-  if (percentage >= 60) return "Recommended";
-  return "Top Recommendation";
-};
+    if (percentage >= 80) return "Highly Recommended";
+    if (percentage >= 60) return "Recommended";
+    return "Top Recommendation";
+  };
 
   const getProgramName = (program) => {
     if (!program) return "No program available";
@@ -76,6 +90,18 @@ export default function ResultsPage({
     }
 
     return program.program_name || program.name || "Program recommendation";
+  };
+
+  const getExplanation = () => {
+    if (result?.explanation) return result.explanation;
+
+    if (topProgram?.description) {
+      return `Based on your assessment answers and selected strand (${result?.strand || "N/A"}), your highest match is ${getProgramName(
+        topProgram
+      )} with a ${topPercentage}% match. This result was calculated using the system's rule-based scoring engine.`;
+    }
+
+    return "This recommendation was generated using Assessify's rule-based scoring engine.";
   };
 
   if (loading) {
@@ -147,21 +173,17 @@ export default function ResultsPage({
                   <p className="result-label">Your Top Match</p>
 
                   <div className="result-circle">
-                    <span>{topPercentage ?? 0}</span>
+                    <span>{topPercentage}</span>
                     <small>%</small>
                   </div>
 
                   <h2 className="result-status">
-                    {getMatchLabel(Number(topPercentage || 0))}
+                    {getMatchLabel(topPercentage)}
                   </h2>
 
                   <h3 className="result-program">{getProgramName(topProgram)}</h3>
 
-                  <p className="result-desc">
-                    {result?.explanation ||
-                      topProgram?.description ||
-                      "This recommendation was generated using Assessify's rule-based scoring engine."}
-                  </p>
+                  <p className="result-desc">{getExplanation()}</p>
                 </>
               ) : (
                 <p>No assessment results available.</p>
@@ -174,24 +196,28 @@ export default function ResultsPage({
               {recommendations.length === 0 ? (
                 <p className="empty-text">No program matches available.</p>
               ) : (
-                recommendations.slice(0, 3).map((item, index) => (
-                  <div className="summary-item" key={item.program_id || index}>
-                    <div className="summary-top">
-                      <span>
-                        #{item.rank || index + 1} {item.program_code} -{" "}
-                        {item.program_name}
-                      </span>
-                      <small>{item.percentage}%</small>
-                    </div>
+                recommendations.slice(0, 3).map((item, index) => {
+                  const percentage = getPercentage(item);
 
-                    <div className="summary-bar">
-                      <div
-                        className="summary-fill"
-                        style={{ width: `${item.percentage}%` }}
-                      ></div>
+                  return (
+                    <div className="summary-item" key={item.program_id || index}>
+                      <div className="summary-top">
+                        <span>
+                          #{item.rank || index + 1} {item.program_code} -{" "}
+                          {item.program_name}
+                        </span>
+                        <small>{percentage}%</small>
+                      </div>
+
+                      <div className="summary-bar">
+                        <div
+                          className="summary-fill"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
 
               <button
@@ -228,32 +254,28 @@ export default function ResultsPage({
 
               <div>
                 <h3>Recommendation Explanation</h3>
-                <p>
-                  {result?.explanation ||
-                    "Your result was calculated using the system's rule-based scoring engine."}
-                </p>
+                <p>{getExplanation()}</p>
 
                 <ul>
-  <li>
-    Strand: <strong>{result?.strand || "No strand selected"}</strong>
-  </li>
-  <li>
-    Top Match:{" "}
-    <strong>
-      {topProgram?.program_code && topProgram?.program_name
-        ? `${topProgram.program_code} - ${topProgram.program_name}`
-        : "No top match available"}
-    </strong>
-  </li>
-  <li>
-    Match Percentage:{" "}
-    <strong>{topPercentage ?? 0}%</strong>
-  </li>
-  <li>
-    Assessment Type:{" "}
-    <strong>Academic Program Suitability Assessment</strong>
-  </li>
-</ul>
+                  <li>
+                    Strand: <strong>{result?.strand || "No strand selected"}</strong>
+                  </li>
+                  <li>
+                    Top Match:{" "}
+                    <strong>
+                      {topProgram?.program_code && topProgram?.program_name
+                        ? `${topProgram.program_code} - ${topProgram.program_name}`
+                        : "No top match available"}
+                    </strong>
+                  </li>
+                  <li>
+                    Match Percentage: <strong>{topPercentage}%</strong>
+                  </li>
+                  <li>
+                    Assessment Type:{" "}
+                    <strong>Academic Program Suitability Assessment</strong>
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -261,18 +283,27 @@ export default function ResultsPage({
               <div className="answer-group">
                 <h3 className="answer-group-title">Course Matches</h3>
 
-                {recommendations.slice(0, 3).map((item, index) => (
-                  <div className="answer-item enhanced" key={item.program_id || index}>
-                    <div className="answer-header">
-                      <span className="question-tag">#{item.rank || index + 1}</span>
-                      <h4>
-                        {item.program_code} - {item.program_name}
-                      </h4>
-                    </div>
+                {recommendations.slice(0, 3).map((item, index) => {
+                  const percentage = getPercentage(item);
 
-                    <div className="answer-pill">{item.percentage}% match</div>
-                  </div>
-                ))}
+                  return (
+                    <div
+                      className="answer-item enhanced"
+                      key={item.program_id || index}
+                    >
+                      <div className="answer-header">
+                        <span className="question-tag">
+                          #{item.rank || index + 1}
+                        </span>
+                        <h4>
+                          {item.program_code} - {item.program_name}
+                        </h4>
+                      </div>
+
+                      <div className="answer-pill">{percentage}% match</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

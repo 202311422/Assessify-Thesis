@@ -53,7 +53,7 @@ export default function AssessmentPage({
     setErrorMessage("");
 
     axios
-      .get("http://localhost/assessify/backend/assessment/get_questions.php")
+      .get("http://localhost/assessify/backend/api/get_assessment_questions.php")
       .then((res) => {
         if (res.data.success) {
           const loadedQuestions =
@@ -186,36 +186,23 @@ export default function AssessmentPage({
       return;
     }
 
-    const unansweredRequired = questions.some((question) => {
-      const required = Number(question.is_required) === 1;
-
-      if (!required) return false;
-
+    const unansweredQuestions = questions.some((question) => {
       return !isAnswered(question);
     });
 
-    if (unansweredRequired) {
-      alert("Please answer all required questions first.");
+    if (unansweredQuestions) {
+      alert("Please answer all questions first.");
       return;
     }
 
-    if (!user?.id) {
-      alert("User ID missing. Please log out and log in again.");
-      return;
-    }
-
-    const formattedAnswers = questions
+    const selectedChoiceIds = questions
       .map((question) => {
         const answer = answers[question.id];
-
-        return {
-          question_id: question.id,
-          choice_id: answer?.choice_id || null,
-        };
+        return answer?.choice_id || null;
       })
-      .filter((answer) => answer.choice_id);
+      .filter((choiceId) => choiceId !== null);
 
-    if (formattedAnswers.length === 0) {
+    if (selectedChoiceIds.length === 0) {
       alert("Please answer the assessment first.");
       return;
     }
@@ -224,11 +211,9 @@ export default function AssessmentPage({
       setSubmitting(true);
 
       const res = await axios.post(
-        "http://localhost/assessify/backend/assessment/submit_assessment.php",
+        "http://localhost/assessify/backend/api/submit_assessment.php",
         {
-          user_id: user.id,
-          strand: selectedStrand,
-          answers: formattedAnswers,
+          selected_choice_ids: selectedChoiceIds,
         }
       );
 
@@ -239,7 +224,13 @@ export default function AssessmentPage({
 
       localStorage.removeItem(progressKey);
 
-      const submissionResult = res.data.data || res.data;
+      const submissionResult = {
+        ...(res.data.data || {}),
+        strand: selectedStrand,
+        assessmentTitle: "Academic Program Suitability Assessment",
+        assessmentType: assessmentType || "main-assessment",
+        submittedAt: new Date().toISOString(),
+      };
 
       onSubmitAssessment(submissionResult);
     } catch (error) {

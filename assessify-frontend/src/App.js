@@ -54,11 +54,41 @@ function StudentApp() {
     setPage("assessment");
   };
 
-  const handleAssessmentSubmit = (submissionResult) => {
-    setLatestResultId(submissionResult?.result_id || null);
-    setLatestResultData(submissionResult || null);
-    setPage("results");
+const handleAssessmentSubmit = (submissionResult) => {
+  const rawRecommendations = submissionResult?.recommendations || [];
+  const selectedChoices = submissionResult?.selected_choices || [];
+
+  const maxPossibleScore =
+    selectedChoices.length > 0 ? selectedChoices.length * 3 : 15;
+
+  const normalizedRecommendations = rawRecommendations.map((program, index) => {
+    const totalScore = Number(program.total_score || 0);
+
+    const correctPercentage =
+      maxPossibleScore > 0
+        ? Math.round((totalScore / maxPossibleScore) * 100)
+        : 0;
+
+    return {
+      ...program,
+      rank: program.rank || index + 1,
+      match_percentage: correctPercentage,
+      percentage: correctPercentage,
+    };
+  });
+
+  const normalizedResult = {
+    ...submissionResult,
+    max_possible_score: maxPossibleScore,
+    recommendations: normalizedRecommendations,
+    top_program: normalizedRecommendations[0] || null,
+    topProgram: normalizedRecommendations[0] || null,
   };
+
+  setLatestResultId(submissionResult?.result_id || null);
+  setLatestResultData(normalizedResult);
+  setPage("results");
+};
 
   if (page === "register") {
     return <RegisterPage setPage={setPage} />;

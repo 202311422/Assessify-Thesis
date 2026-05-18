@@ -210,13 +210,23 @@ export default function AssessmentPage({
     try {
       setSubmitting(true);
 
+      const studentId = user?.id || user?.user_id || user?.student_id || user?.userId;
+
+      if (!studentId) {
+        console.log("Current user object:", user);
+        alert("User ID missing. Please log out and log in again.");
+        setSubmitting(false);
+        return;
+      }
+
       const res = await axios.post(
         "http://localhost/assessify/backend/api/submit_assessment.php",
         {
+          user_id: studentId,
+          strand: selectedStrand,
           selected_choice_ids: selectedChoiceIds,
         }
       );
-
       if (!res.data.success) {
         alert(res.data.message || "Assessment submission failed.");
         return;

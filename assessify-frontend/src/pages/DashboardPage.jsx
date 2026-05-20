@@ -11,6 +11,7 @@ export default function DashboardPage({
   const [savedProgress, setSavedProgress] = useState(null);
   const [loadingResults, setLoadingResults] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const fullName = user?.full_name || user?.name || "Student";
   const email = user?.email || "No email";
@@ -59,6 +60,7 @@ export default function DashboardPage({
   }, [user]);
 
   const latestResult = savedResults.length > 0 ? savedResults[0] : null;
+  const strand = user?.strand || latestResult?.strand || "No strand";
 
   const getTopProgramLabel = (result) => {
     if (!result) return "No result";
@@ -86,6 +88,14 @@ export default function DashboardPage({
     }
 
     return null;
+  };
+
+  const handleSettingsClick = () => {
+    setShowSettingsModal(true);
+  };
+
+  const closeSettingsModal = () => {
+    setShowSettingsModal(false);
   };
 
   const handleLogoutClick = () => {
@@ -119,6 +129,10 @@ export default function DashboardPage({
             Student Dashboard
           </div>
 
+          <button className="student-settings-btn" onClick={handleSettingsClick}>
+            Settings
+          </button>
+
           <button className="student-logout-btn" onClick={handleLogoutClick}>
             Logout
           </button>
@@ -131,25 +145,18 @@ export default function DashboardPage({
             <div className="hero-card">
               <div className="hero-content">
                 <div className="hero-text">
-                  <p className="hero-welcome">Welcome back, {fullName}</p>
+                  <p className="hero-welcome">Welcome, {fullName}</p>
 
                   <h2>Find the best college program for you.</h2>
 
                   <p className="hero-description">
                     Start with one guided assessment. Assessify evaluates your
-                    interests, strengths, strand, and goals using rule-based
+                    skills, interests, strengths, and goals using rule-based
                     scoring, then presents your top recommended programs with
                     explanations.
                   </p>
 
                   <div className="hero-actions">
-                    <button
-                      className="primary-btn"
-                      onClick={() => onStartAssessment("main-assessment")}
-                    >
-                      Start Assessment →
-                    </button>
-
                     <div className="time-pill">Maximum 50 questions</div>
                   </div>
                 </div>
@@ -186,70 +193,19 @@ export default function DashboardPage({
 
             <section className="dashboard-section">
               <div className="section-header">
-                <h3>Continue where you left off</h3>
-              </div>
-
-              {savedProgress ? (
-                <div className="card-grid two-col">
-                  <div className="dashboard-card">
-                    <div
-                      className="card-image"
-                      style={{
-                        backgroundImage:
-                          "url(https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1200&auto=format&fit=crop)",
-                      }}
-                    ></div>
-
-                    <div className="card-body">
-                      <div className="card-top-row">
-                        <h4>{savedProgress.assessmentTitle || "Assessment"}</h4>
-                        <span className="progress-badge">
-                          {savedProgress.progressPercent || 0}%
-                        </span>
-                      </div>
-
-                      <div className="progress-bar">
-                        <div
-                          className="progress-fill"
-                          style={{
-                            width: `${savedProgress.progressPercent || 0}%`,
-                          }}
-                        ></div>
-                      </div>
-
-                      <button
-                        className="card-action"
-                        onClick={() =>
-                          onStartAssessment(
-                            savedProgress.assessmentType || "main-assessment"
-                          )
-                        }
-                      >
-                        Continue →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="results-lock-box">
-                  <h4>No unfinished assessment</h4>
-                  <p>
-                    Start the assessment, then exit before submitting to continue
-                    later.
-                  </p>
-                </div>
-              )}
-            </section>
-
-            <section className="dashboard-section">
-              <div className="section-header">
-                <h3>Assessment</h3>
+                <h3>{savedProgress ? "Continue where you left off" : "Assessment"}</h3>
               </div>
 
               <div className="card-grid two-col">
                 <div
                   className="dashboard-card"
-                  onClick={() => onStartAssessment("main-assessment")}
+                  onClick={() =>
+                    savedProgress
+                      ? onStartAssessment(
+                          savedProgress.assessmentType || "main-assessment"
+                        )
+                      : onStartAssessment("main-assessment")
+                  }
                   style={{ cursor: "pointer" }}
                 >
                   <div
@@ -262,14 +218,23 @@ export default function DashboardPage({
 
                   <div className="card-body assessment-body">
                     <div>
-                      <h4>Academic Program Suitability Assessment</h4>
+                      <h4>
+                        {savedProgress
+                          ? savedProgress.assessmentTitle ||
+                            "Academic Program Suitability Assessment"
+                          : "Academic Program Suitability Assessment"}
+                      </h4>
+
                       <p>
-                        One guided assessment for incoming Gordon College
-                        students.
+                        {savedProgress
+                          ? "You have an unfinished assessment. Continue from your saved progress."
+                          : "One guided assessment for incoming Gordon College students."}
                       </p>
                     </div>
 
-                    <span className="course-code">START</span>
+                    <span className="course-code">
+                      {savedProgress ? "CONTINUE" : "START"}
+                    </span>
                   </div>
                 </div>
 
@@ -366,24 +331,31 @@ export default function DashboardPage({
                           <h4>Top 3 Course Matches</h4>
 
                           {latestResult.recommendations
-  .slice(0, 3)
-  .map((item) => (
-    <div
-      className="top-match-row"
-      key={item.rank || item.program_id}
-    >
-      <div className="top-match-left">
-        <span className="top-match-rank">#{item.rank}</span>
+                            .slice(0, 3)
+                            .map((item) => (
+                              <div
+                                className="top-match-row"
+                                key={item.rank || item.program_id}
+                              >
+                                <div className="top-match-left">
+                                  <span className="top-match-rank">
+                                    #{item.rank}
+                                  </span>
 
-        <div className="top-match-info">
-          <strong>{item.program_code}</strong>
-          <p>{item.program_name || "Program name unavailable"}</p>
-        </div>
-      </div>
+                                  <div className="top-match-info">
+                                    <strong>{item.program_code}</strong>
+                                    <p>
+                                      {item.program_name ||
+                                        "Program name unavailable"}
+                                    </p>
+                                  </div>
+                                </div>
 
-      <span className="top-match-percent">{item.percentage}%</span>
-    </div>
-  ))}
+                                <span className="top-match-percent">
+                                  {item.percentage}%
+                                </span>
+                              </div>
+                            ))}
                         </div>
                       )}
                   </>
@@ -398,6 +370,75 @@ export default function DashboardPage({
           </aside>
         </div>
       </main>
+
+      {showSettingsModal && (
+        <div className="student-settings-modal-overlay">
+          <div className="student-settings-modal">
+            <div className="settings-modal-header">
+              <div>
+                <p className="settings-eyebrow">Student Settings</p>
+                <h2>Profile Settings</h2>
+              </div>
+
+              <button
+                className="settings-close-btn"
+                onClick={closeSettingsModal}
+                aria-label="Close settings"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="settings-profile-summary">
+              <img
+                src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(
+                  fullName
+                )}`}
+                alt="Profile"
+                className="settings-avatar"
+              />
+
+              <div>
+                <h3>{fullName}</h3>
+                <p>{email}</p>
+              </div>
+            </div>
+
+            <div className="settings-fields">
+              <div className="settings-field">
+                <label>Full Name</label>
+                <div>{fullName}</div>
+              </div>
+
+              <div className="settings-field">
+                <label>Email</label>
+                <div>{email}</div>
+              </div>
+
+              <div className="settings-field">
+                <label>Applicant Number</label>
+                <div>{applicantNumber}</div>
+              </div>
+
+              <div className="settings-field">
+                <label>Strand</label>
+                <div>{strand}</div>
+              </div>
+            </div>
+
+            <div className="settings-note">
+              <strong>Note:</strong> Profile editing can be enabled later once
+              the backend update endpoint is ready.
+            </div>
+
+            <div className="settings-modal-actions">
+              <button className="settings-done-btn" onClick={closeSettingsModal}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showLogoutModal && (
         <div className="student-logout-modal-overlay">

@@ -11,7 +11,11 @@ $email = trim($data["email"] ?? "");
 $user_password = trim($data["password"] ?? "");
 
 if (empty($email) || empty($user_password)) {
-    sendResponse(false, "Email and password are required.", null, 400);
+    echo json_encode([
+        "success" => false,
+        "message" => "Email and password are required."
+    ]);
+    exit();
 }
 
 try {
@@ -25,7 +29,8 @@ try {
             email,
             password,
             applicant_number,
-            is_active
+            is_active,
+            email_verified
         FROM users
         WHERE email = ?
         LIMIT 1
@@ -35,15 +40,35 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
-        sendResponse(false, "Invalid email or password.", null, 401);
+        echo json_encode([
+            "success" => false,
+            "message" => "Invalid email or password."
+        ]);
+        exit();
     }
 
     if ((int)$user["is_active"] !== 1) {
-        sendResponse(false, "Your account is inactive. Please contact the administrator.", null, 403);
+        echo json_encode([
+            "success" => false,
+            "message" => "Your account is inactive. Please contact the administrator."
+        ]);
+        exit();
+    }
+
+    if ((int)$user["email_verified"] !== 1) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Please verify your email before logging in."
+        ]);
+        exit();
     }
 
     if (!password_verify($user_password, $user["password"])) {
-        sendResponse(false, "Invalid email or password.", null, 401);
+        echo json_encode([
+            "success" => false,
+            "message" => "Invalid email or password."
+        ]);
+        exit();
     }
 
     $_SESSION["user_id"] = $user["id"];
@@ -54,20 +79,34 @@ try {
     $_SESSION["email"] = $user["email"];
     $_SESSION["role"] = "student";
 
-    sendResponse(true, "Login successful.", [
-        "user" => [
-            "id" => $user["id"],
-            "first_name" => $user["first_name"],
-            "middle_name" => $user["middle_name"],
-            "last_name" => $user["last_name"],
-            "full_name" => $user["full_name"],
-            "email" => $user["email"],
-            "applicant_number" => $user["applicant_number"],
-            "role" => "student"
+    $loggedInUser = [
+        "id" => (int)$user["id"],
+        "first_name" => $user["first_name"],
+        "middle_name" => $user["middle_name"],
+        "last_name" => $user["last_name"],
+        "full_name" => $user["full_name"],
+        "email" => $user["email"],
+        "applicant_number" => $user["applicant_number"],
+        "role" => "student",
+        "email_verified" => (int)$user["email_verified"]
+    ];
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Login successful.",
+
+        "user" => $loggedInUser,
+
+        "data" => [
+            "user" => $loggedInUser
         ]
     ]);
 
 } catch (PDOException $e) {
-    sendResponse(false, "Login failed: " . $e->getMessage(), null, 500);
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Login failed: " . $e->getMessage()
+    ]);
 }
 ?>

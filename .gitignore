@@ -149,3 +149,13 @@ assessify-frontend/node_modules/
 .env
 vendor/
 
+backend/vendor/
+vendor/
+.env
+node_modules/
+assessify-frontend/node_modules/
+assessify-frontend/public/Antigravity.exe
+
+backend/.env
+.env
+

@@ -2,6 +2,7 @@
 require_once "../utils/cors.php";
 require_once "../utils/response.php";
 require_once "../config/db.php";
+require_once "../utils/mailer.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -25,14 +26,19 @@ if (strlen($user_password) < 6) {
 
 try {
     $checkStmt = $conn->prepare("
-        SELECT id 
+        SELECT id, email_verified
         FROM users 
         WHERE email = ?
         LIMIT 1
     ");
     $checkStmt->execute([$email]);
+    $existingUser = $checkStmt->fetch();
 
-    if ($checkStmt->fetch()) {
+    if ($existingUser) {
+        if ((int)$existingUser["email_verified"] === 0) {
+            sendResponse(false, "Email already registered but not verified. Please check your email for the verification link.", null, 409);
+        }
+
         sendResponse(false, "Email already exists.", null, 409);
     }
 
@@ -45,8 +51,7 @@ try {
     );
 
     /*
-        Generate applicant number.
-        This retries until it finds an unused applicant number.
+        Generate unique applicant number
     */
     do {
         $applicantNumber = "APP-" . str_pad(random_int(1, 9999), 4, "0", STR_PAD_LEFT);
@@ -59,8 +64,14 @@ try {
         ");
         $applicantCheck->execute([$applicantNumber]);
 
-        $exists = $applicantCheck->fetch();
-    } while ($exists);
+        $applicantExists = $applicantCheck->fetch();
+    } while ($applicantExists);
+
+    /*
+        Generate email verification token
+    */
+    $verificationToken = bin2hex(random_bytes(32));
+    $verificationExpires = date("Y-m-d H:i:s", strtotime("+24 hours"));
 
     $stmt = $conn->prepare("
         INSERT INTO users 
@@ -72,9 +83,12 @@ try {
             email,
             password,
             applicant_number,
-            is_active
+            is_active,
+            email_verified,
+            verification_token,
+            verification_expires
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?)
     ");
 
     $stmt->execute([
@@ -84,20 +98,44 @@ try {
         $full_name,
         $email,
         $hashedPassword,
-        $applicantNumber
+        $applicantNumber,
+        $verificationToken,
+        $verificationExpires
     ]);
 
-    sendResponse(true, "Registration successful.", [
+    $userId = (int)$conn->lastInsertId();
+
+    $mailConfig = require "../config/mail.php";
+
+    $verificationLink = $mailConfig["backend_base_url"] . "/auth/verify_email.php?token=" . urlencode($verificationToken);
+
+    $mailResult = sendVerificationEmail($email, $full_name, $verificationLink);
+
+    $responseMessage = $mailResult["success"]
+    ? "Registration successful. Please check your email to verify your account."
+    : "Registration successful, but verification email was not sent. Use the verification link returned for local testing.";
+
+sendResponse(true, $responseMessage, [
         "user" => [
-            "id" => $conn->lastInsertId(),
+            "id" => $userId,
             "first_name" => $first_name,
             "middle_name" => $middle_name !== "" ? $middle_name : null,
             "last_name" => $last_name,
             "full_name" => $full_name,
             "email" => $email,
             "applicant_number" => $applicantNumber,
-            "role" => "student"
-        ]
+            "role" => "student",
+            "email_verified" => 0
+        ],
+
+        /*
+            Kept for local testing.
+            If email sending fails, you can manually open this link.
+        */
+        "verification_link" => $verificationLink,
+        "email_sent" => $mailResult["success"],
+        "email_message" => $mailResult["message"],
+        "email_error" => $mailResult["success"] ? null : ($mailResult["error"] ?? null)
     ], 201);
 
 } catch (PDOException $e) {

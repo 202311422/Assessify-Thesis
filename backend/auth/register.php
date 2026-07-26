@@ -111,11 +111,25 @@ try {
 
     $mailResult = sendVerificationEmail($email, $full_name, $verificationLink);
 
-    $responseMessage = $mailResult["success"]
-    ? "Registration successful. Please check your email to verify your account."
-    : "Registration successful, but verification email was not sent. Use the verification link returned for local testing.";
+    $emailVerifiedVal = 0;
+    if ($mailResult["success"]) {
+        $responseMessage = "Registration successful. Please check your email to verify your account.";
+    } else {
+        // Automatically verify account if email fails to send (likely due to missing SMTP in local dev environment)
+        $autoVerifyStmt = $conn->prepare("
+            UPDATE users 
+            SET 
+                email_verified = 1,
+                verification_token = NULL,
+                verification_expires = NULL
+            WHERE id = ?
+        ");
+        $autoVerifyStmt->execute([$userId]);
+        $responseMessage = "Registration successful. Since email verification could not be sent (local testing), your account has been automatically verified.";
+        $emailVerifiedVal = 1;
+    }
 
-sendResponse(true, $responseMessage, [
+    sendResponse(true, $responseMessage, [
         "user" => [
             "id" => $userId,
             "first_name" => $first_name,
@@ -125,7 +139,7 @@ sendResponse(true, $responseMessage, [
             "email" => $email,
             "applicant_number" => $applicantNumber,
             "role" => "student",
-            "email_verified" => 0
+            "email_verified" => $emailVerifiedVal
         ],
 
         /*

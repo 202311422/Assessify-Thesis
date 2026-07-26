@@ -91,7 +91,7 @@ const handleAssessmentSubmit = (submissionResult) => {
 };
 
   if (page === "register") {
-    return <RegisterPage setPage={setPage} />;
+    return <RegisterPage setPage={setPage} onLoginSuccess={handleLoginSuccess} />;
   }
 
   if (page === "assessment" && user) {

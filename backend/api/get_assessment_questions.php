@@ -52,10 +52,10 @@ try {
             id,
             question_text,
             category,
-            question_order
+            display_order AS question_order
         FROM assessment_questions
         WHERE is_active = 1
-        ORDER BY question_order ASC, id ASC
+        ORDER BY display_order ASC, id ASC
     ";
 
     $questionsStmt = $pdo->prepare($questionsQuery);
@@ -67,10 +67,10 @@ try {
             id,
             question_id,
             choice_text,
-            choice_order
+            display_order AS choice_order
         FROM question_choices
         WHERE is_active = 1
-        ORDER BY choice_order ASC, id ASC
+        ORDER BY display_order ASC, id ASC
     ";
 
     $choicesStmt = $pdo->prepare($choicesQuery);

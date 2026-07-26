@@ -487,3 +487,78 @@
     align-items: flex-start;
   }
 }
+
+/* Print-specific layout styling */
+.print-header {
+  display: none;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: Arial, sans-serif !important;
+  }
+
+  .no-print,
+  button,
+  .view-toggle,
+  .btn-download-pdf,
+  .continue-btn {
+    display: none !important;
+  }
+
+  .results-page {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
+
+  .results-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-header {
+    display: block !important;
+  }
+
+  .results-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  .insight-summary {
+    background: #f4f7f4 !important;
+    border: 1px solid #d9e2dc !important;
+    border-radius: 12px !important;
+    padding: 15px !important;
+  }
+
+  .insight-icon {
+    box-shadow: none !important;
+    background: #004b23 !important;
+    color: white !important;
+  }
+
+  .answer-item.enhanced {
+    background: white !important;
+    border: 1px solid #d9e2dc !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    transform: none !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .answer-pill {
+    background: #fffdf5 !important;
+    color: #9a7400 !important;
+    border: 1px solid #f5d442 !important;
+  }
+}

@@ -107,6 +107,22 @@ try {
     }
     unset($program);
 
+    $departmentDistributionStmt = $pdo->query("
+        SELECT
+            p.college_department,
+            COUNT(ar.id) AS total
+        FROM assessment_results ar
+        INNER JOIN programs p ON ar.top_program_id = p.id
+        GROUP BY p.college_department
+        ORDER BY total DESC
+    ");
+    $departmentDistribution = $departmentDistributionStmt->fetchAll();
+
+    foreach ($departmentDistribution as &$dept) {
+        $dept["total"] = (int)$dept["total"];
+    }
+    unset($dept);
+
     sendResponse(true, "Dashboard statistics loaded successfully.", [
         "cards" => [
             "total_students" => $totalStudents,
@@ -117,7 +133,8 @@ try {
         ],
         "most_recommended_program" => $mostRecommended ?: null,
         "recent_results" => $recentResults,
-        "program_distribution" => $programDistribution
+        "program_distribution" => $programDistribution,
+        "department_distribution" => $departmentDistribution
     ]);
 
 } catch (Exception $e) {

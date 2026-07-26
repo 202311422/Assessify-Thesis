@@ -20,7 +20,7 @@ try {
             updated_at
         FROM programs
         WHERE is_active = 1
-        ORDER BY program_code ASC
+        ORDER BY college_department ASC, program_code ASC
     ");
 
     $programs = $stmt->fetchAll();

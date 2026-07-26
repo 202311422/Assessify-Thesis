@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 17, 2026 at 03:14 PM
+-- Generation Time: Jun 24, 2026 at 09:00 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -555,18 +555,21 @@ CREATE TABLE `users` (
   `strand` varchar(100) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `email_verified` tinyint(1) NOT NULL DEFAULT 0,
+  `verification_token` varchar(255) DEFAULT NULL,
+  `verification_expires` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `first_name`, `middle_name`, `last_name`, `full_name`, `email`, `password`, `applicant_number`, `strand`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, NULL, NULL, NULL, 'Test Student', 'test@student.com', '$2y$10$Q0Goil06pYwkZY79Z8SXP.tchSisUhNRy3kWvJuDRZPsY/H2E1cii', 'APP-001', NULL, 1, '2026-05-03 16:05:17', '2026-05-03 16:05:17'),
-(2, NULL, NULL, NULL, 'test33@gmail.com', 'test33@gmail.com', '$2y$10$lavszYAE6N13pn3wdLS4GO/dzScMKU5MxJV8.k6pj1NFN/UJP4bO2', 'APP-8068', NULL, 1, '2026-05-08 13:50:24', '2026-05-08 13:50:24'),
-(3, NULL, NULL, NULL, 'Noel Justin Notario', 'test22@gmail.com', '$2y$10$Gj6geUOkPzJv3J/lRbPHj.ExjqKyGf4yY//9rEc/JZhch31fygf1S', 'APP-2855', 'STEM', 1, '2026-05-09 08:30:48', '2026-05-09 08:30:48'),
-(4, NULL, NULL, NULL, 'Noel Justin Notario', 'test11@gmail.com', '$2y$10$k3UJJ1yvpwB31MV0jwpJaOvkR4quNjSLP6GWVPebg6gQAw1zbOTYG', 'APP-1032', 'TVL-ICT', 1, '2026-05-09 08:54:36', '2026-05-09 08:54:36');
+INSERT INTO `users` (`id`, `first_name`, `middle_name`, `last_name`, `full_name`, `email`, `password`, `applicant_number`, `strand`, `is_active`, `created_at`, `updated_at`, `email_verified`) VALUES
+(1, NULL, NULL, NULL, 'Test Student', 'test@student.com', '$2y$10$Q0Goil06pYwkZY79Z8SXP.tchSisUhNRy3kWvJuDRZPsY/H2E1cii', 'APP-001', NULL, 1, '2026-05-03 16:05:17', '2026-05-03 16:05:17', 0),
+(2, NULL, NULL, NULL, 'test33@gmail.com', 'test33@gmail.com', '$2y$10$lavszYAE6N13pn3wdLS4GO/dzScMKU5MxJV8.k6pj1NFN/UJP4bO2', 'APP-8068', NULL, 1, '2026-05-08 13:50:24', '2026-05-08 13:50:24', 0),
+(3, NULL, NULL, NULL, 'Noel Justin Notario', 'test22@gmail.com', '$2y$10$Gj6geUOkPzJv3J/lRbPHj.ExjqKyGf4yY//9rEc/JZhch31fygf1S', 'APP-2855', 'STEM', 1, '2026-05-09 08:30:48', '2026-05-09 08:30:48', 0),
+(4, NULL, NULL, NULL, 'Noel Justin Notario', 'test11@gmail.com', '$2y$10$k3UJJ1yvpwB31MV0jwpJaOvkR4quNjSLP6GWVPebg6gQAw1zbOTYG', 'APP-1032', 'TVL-ICT', 1, '2026-05-09 08:54:36', '2026-05-09 08:54:36', 0);
 
 --
 -- Indexes for dumped tables

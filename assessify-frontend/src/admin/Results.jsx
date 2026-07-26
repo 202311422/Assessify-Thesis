@@ -157,6 +157,7 @@ const Results = () => {
 
       {selectedResult && (
         <div
+          className="admin-print-modal-overlay"
           style={{
             position: "fixed",
             inset: 0,
@@ -169,6 +170,7 @@ const Results = () => {
           }}
         >
           <div
+            className="admin-print-modal-content"
             style={{
               background: "#fff",
               borderRadius: "14px",
@@ -178,6 +180,27 @@ const Results = () => {
               overflowY: "auto",
             }}
           >
+            {/* Print-only official header layout */}
+            <div className="print-header">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "3px solid #004b23", paddingBottom: "15px", marginBottom: "25px" }}>
+                <div>
+                  <h1 style={{ color: "#004b23", margin: 0, fontSize: "28px", fontWeight: "900" }}>ASSESSIFY</h1>
+                  <p style={{ margin: "2px 0 0", color: "#5a7059", fontSize: "12px", fontWeight: "700" }}>Gordon College Academic Assessment System</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <h3 style={{ margin: 0, fontSize: "14px", color: "#333" }}>OFFICIAL EVALUATION REPORT</h3>
+                  <p style={{ margin: "2px 0 0", color: "#666", fontSize: "11px" }}>Date Generated: {new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+              
+              <div style={{ background: "#f4f7f4", border: "1px solid #d9e2dc", borderRadius: "10px", padding: "15px", marginBottom: "25px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", color: "#333", fontSize: "14px" }}>
+                <div><strong>Student Name:</strong> {getStudentName(selectedResult)}</div>
+                <div><strong>Email:</strong> {getStudentEmail(selectedResult)}</div>
+                <div><strong>Applicant No:</strong> {getApplicantNumber(selectedResult)}</div>
+                <div><strong>Strand:</strong> {getStrand(selectedResult)}</div>
+              </div>
+            </div>
+
             <div
               style={{
                 display: "flex",
@@ -185,6 +208,7 @@ const Results = () => {
                 alignItems: "center",
                 marginBottom: "15px",
               }}
+              className="no-print"
             >
               <div>
                 <h2>Result Details</h2>
@@ -195,12 +219,39 @@ const Results = () => {
                 </p>
               </div>
 
-              <button
-                className="btn-view-result"
-                onClick={() => setSelectedResult(null)}
-              >
-                Close
-              </button>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  className="btn-download-pdf"
+                  onClick={() => window.print()}
+                  style={{
+                    background: "#004b23",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "8px",
+                    padding: "8px 14px",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download PDF
+                </button>
+                <button
+                  className="btn-view-result"
+                  onClick={() => setSelectedResult(null)}
+                  style={{ background: "#666", color: "#fff" }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
             <div style={{ marginBottom: "18px" }}>

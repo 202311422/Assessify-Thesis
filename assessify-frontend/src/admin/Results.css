@@ -23,3 +23,76 @@
 .btn-view-result:hover {
   background: #356734;
 }
+
+/* Print-specific layout styling for Admin Results */
+.print-header {
+  display: none;
+}
+
+@media print {
+  /* Hide sidebar, topbar, table listing and action buttons */
+  .sidebar,
+  .top-bar,
+  .page-header,
+  .card,
+  .no-print,
+  button,
+  .btn-view-result {
+    display: none !important;
+  }
+
+  /* Reset layout containers to prevent hiding child elements */
+  .admin-container,
+  .main-content,
+  body,
+  html {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+  }
+
+  .print-header {
+    display: block !important;
+  }
+
+  /* Flatten modal view */
+  .admin-print-modal-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    z-index: 1 !important;
+  }
+
+  .admin-print-modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  /* Print formatting for sections */
+  h2, h3, h4 {
+    color: #004b23 !important;
+  }
+
+  div[style*="border"] {
+    border: 1px solid #d9e2dc !important;
+    border-radius: 10px !important;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+    background: white !important;
+  }
+}

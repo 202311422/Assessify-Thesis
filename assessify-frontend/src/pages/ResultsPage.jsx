@@ -14,6 +14,19 @@ export default function ResultsPage({
   const [loading, setLoading] = useState(!resultData);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const handleDownloadPDF = () => {
+    const originalView = view;
+    if (view !== "details") {
+      setView("details");
+      setTimeout(() => {
+        window.print();
+        setView(originalView);
+      }, 250);
+    } else {
+      window.print();
+    }
+  };
+
   useEffect(() => {
     if (resultData) {
       setResult(resultData);
@@ -141,26 +154,76 @@ export default function ResultsPage({
   return (
     <div className="results-page">
       <div className="results-container">
-        <div className="results-header">
+        {/* Print-only official header layout */}
+        <div className="print-header">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "3px solid #004b23", paddingBottom: "15px", marginBottom: "25px" }}>
+            <div>
+              <h1 style={{ color: "#004b23", margin: 0, fontSize: "28px", fontWeight: "900" }}>ASSESSIFY</h1>
+              <p style={{ margin: "2px 0 0", color: "#5a7059", fontSize: "12px", fontWeight: "700" }}>Gordon College Academic Assessment System</p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <h3 style={{ margin: 0, fontSize: "14px", color: "#333" }}>STUDENT EVALUATION REPORT</h3>
+              <p style={{ margin: "2px 0 0", color: "#666", fontSize: "11px" }}>Date Generated: {new Date().toLocaleDateString()}</p>
+            </div>
+          </div>
+          
+          <div style={{ background: "#f4f7f4", border: "1px solid #d9e2dc", borderRadius: "10px", padding: "15px", marginBottom: "25px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <div><strong>Student Name:</strong> {user?.full_name}</div>
+            <div><strong>Email:</strong> {user?.email}</div>
+            <div><strong>Applicant No:</strong> {result?.student?.applicant_number || user?.applicant_number || "N/A"}</div>
+            <div><strong>Strand:</strong> {result?.strand || "N/A"}</div>
+          </div>
+        </div>
+
+        <div className="results-header no-print">
           <p className="results-user">Student: {user?.full_name}</p>
           <h1>Assessment Results</h1>
           <p className="results-subtitle">
             Based on your responses, here are your top academic program matches.
           </p>
 
-          <div className="view-toggle">
-            <button
-              className={view === "results" ? "active" : ""}
-              onClick={() => setView("results")}
-            >
-              Results
-            </button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "15px", marginTop: "15px" }}>
+            <div className="view-toggle" style={{ margin: 0 }}>
+              <button
+                className={view === "results" ? "active" : ""}
+                onClick={() => setView("results")}
+              >
+                Results
+              </button>
+
+              <button
+                className={view === "details" ? "active" : ""}
+                onClick={() => setView("details")}
+              >
+                Details
+              </button>
+            </div>
 
             <button
-              className={view === "details" ? "active" : ""}
-              onClick={() => setView("details")}
+              className="btn-download-pdf no-print"
+              onClick={handleDownloadPDF}
+              style={{
+                background: "#004b23",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 16px",
+                fontWeight: "700",
+                fontSize: "14px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 4px 12px rgba(0, 75, 35, 0.15)",
+                transition: "all 0.2s ease"
+              }}
             >
-              Details
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download PDF
             </button>
           </div>
         </div>

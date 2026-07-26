@@ -126,7 +126,7 @@ try {
         FROM question_choices qc
         JOIN assessment_questions aq ON qc.question_id = aq.id
         WHERE qc.id IN ($placeholders)
-        ORDER BY aq.question_order ASC, qc.choice_order ASC
+        ORDER BY aq.display_order ASC, qc.display_order ASC
     ";
 
     $validateStmt = $pdo->prepare($validateQuery);
@@ -269,9 +269,8 @@ try {
 
     foreach ($recommendations as $index => $program) {
         $totalScore = intval($program["total_score"]);
-        $matchPercentage = $maxPossibleScore > 0
-            ? round(($totalScore / $maxPossibleScore) * 100)
-            : 0;
+        // Compute match percentage relative to a max score of 15 per category/program
+        $matchPercentage = min(100, round(($totalScore / 15) * 100));
 
         $rank = $index + 1;
 
@@ -296,6 +295,25 @@ try {
         ];
     }
 
+    // ============================================================
+    // Generate explanation and save it
+    // ============================================================
+    $topProgram = $formattedRecommendations[0] ?? null;
+    $basicExplanation = "";
+    if ($topProgram) {
+        $basicExplanation = "Based on your assessment answers and selected strand (" .
+            $strand . "), your highest match is " .
+            $topProgram["program_code"] . " - " .
+            $topProgram["program_name"] . " with a " .
+            $topProgram["percentage"] . "% match. This result was calculated using the system's rule-based scoring engine.";
+
+        $aiStmt = $pdo->prepare("
+            INSERT INTO ai_explanations (result_id, explanation)
+            VALUES (?, ?)
+        ");
+        $aiStmt->execute([$resultId, $basicExplanation]);
+    }
+
     $pdo->commit();
 
     echo json_encode([
@@ -307,9 +325,10 @@ try {
             "user_id" => $userId,
             "strand" => $strand,
             "selected_choices" => $selectedChoices,
-            "max_possible_score" => $maxPossibleScore,
+            "max_possible_score" => 15, // matches the visual UI maximum
             "top_program" => $formattedRecommendations[0] ?? null,
-            "recommendations" => $formattedRecommendations
+            "recommendations" => $formattedRecommendations,
+            "explanation" => $basicExplanation
         ]
     ]);
     exit;

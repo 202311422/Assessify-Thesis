@@ -32,6 +32,40 @@ const AdminDashboard = () => {
   const cards = stats?.cards || {};
   const recentResults = stats?.recent_results || [];
   const mostRecommended = stats?.most_recommended_program || null;
+  const deptData = stats?.department_distribution || [];
+
+  const totalMatches = deptData.reduce((sum, item) => sum + item.total, 0);
+
+  const getDeptColor = (dept) => {
+    if (!dept) return "#9ca3af";
+    const name = dept.toLowerCase();
+    if (name.includes("health") || name.includes("cahs")) return "#06b6d4"; // Cyan
+    if (name.includes("business") || name.includes("cba")) return "#f59e0b"; // Amber
+    if (name.includes("computer") || name.includes("ccs")) return "#10b981"; // Emerald
+    if (name.includes("education") || name.includes("ceas")) return "#6366f1"; // Indigo
+    if (name.includes("hospitality") || name.includes("chtm")) return "#ec4899"; // Pink
+    return "#8b5cf6"; // Purple default
+  };
+
+  const getDeptLabel = (dept) => {
+    if (!dept) return "Other";
+    const match = dept.match(/\(([^)]+)\)/);
+    return match ? match[1] : dept;
+  };
+
+  let cumulativePercent = 0;
+  const gradientSlices = deptData.map((item) => {
+    const percent = totalMatches > 0 ? (item.total / totalMatches) * 100 : 0;
+    const start = cumulativePercent;
+    cumulativePercent += percent;
+    return `${getDeptColor(item.college_department)} ${start}% ${cumulativePercent}%`;
+  });
+
+  const backgroundStyle = {
+    background: totalMatches > 0 
+      ? `conic-gradient(${gradientSlices.join(", ")})` 
+      : "#e5e7eb"
+  };
 
   const formatDate = (dateValue) => {
     if (!dateValue) return "N/A";
@@ -128,6 +162,49 @@ const AdminDashboard = () => {
               ? `${mostRecommended.program_code} - ${mostRecommended.program_name}`
               : "No data yet"}
           </p>
+        </div>
+      </section>
+
+      {/* PIE CHART / MATCH DISTRIBUTION */}
+      <section className="dashboard-charts">
+        <div className="chart-card">
+          <h3>Program Match Trends by College Department</h3>
+          <p className="chart-subtitle">Percentage of students matched to each college department based on their assessment results</p>
+          
+          <div className="chart-container">
+            {totalMatches > 0 ? (
+              <div className="chart-content-wrapper">
+                <div className="pie-chart-wrapper">
+                  <div className="conic-pie-chart" style={backgroundStyle}>
+                    <div className="pie-chart-inner">
+                      <span className="total-count">{totalMatches}</span>
+                      <span className="total-label">Matches</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="chart-legend">
+                  {deptData.map((item) => {
+                    const pct = totalMatches > 0 ? Math.round((item.total / totalMatches) * 100) : 0;
+                    return (
+                      <div key={item.college_department} className="legend-item">
+                        <span 
+                          className="legend-color" 
+                          style={{ backgroundColor: getDeptColor(item.college_department) }}
+                        />
+                        <span className="legend-name">
+                          <strong>{getDeptLabel(item.college_department)}</strong>: <strong>{item.total}</strong> student{item.total !== 1 ? 's' : ''} ({pct}%)
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="no-chart-data">
+                <p>No student match data available yet. Students must take the assessment to populate this chart.</p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

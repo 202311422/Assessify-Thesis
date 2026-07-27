@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./DashboardPage.css";
+import logo from "../assets/Assessify_logo.png";
 
 export default function DashboardPage({
   user,
@@ -115,7 +116,7 @@ export default function DashboardPage({
     <div className="dashboard-page">
       <header className="dashboard-topbar">
         <div className="dashboard-brand">
-          <img src="/logo512.png" alt="Logo" className="dashboard-logo" />
+          <img src={logo} alt="Logo" className="dashboard-logo" />
 
           <div className="dashboard-brand-text">
             <h1>ASSESSIFY</h1>

@@ -198,7 +198,7 @@ try {
         exit;
     }
 
-    $maxPossibleScore = count($selectedChoiceIds) * 3;
+    $maxPossibleScore = count($selectedChoiceIds) * 5;
     $topProgramId = intval($recommendations[0]["program_id"]);
 
     // ============================================================
@@ -269,8 +269,8 @@ try {
 
     foreach ($recommendations as $index => $program) {
         $totalScore = intval($program["total_score"]);
-        // Compute match percentage relative to a max score of 15 per category/program
-        $matchPercentage = min(100, round(($totalScore / 15) * 100));
+        // Compute match percentage relative to the dynamic max possible score
+        $matchPercentage = min(100, round(($totalScore / $maxPossibleScore) * 100, 2));
 
         $rank = $index + 1;
 
@@ -325,7 +325,7 @@ try {
             "user_id" => $userId,
             "strand" => $strand,
             "selected_choices" => $selectedChoices,
-            "max_possible_score" => 15, // matches the visual UI maximum
+            "max_possible_score" => $maxPossibleScore, // matches the visual UI maximum
             "top_program" => $formattedRecommendations[0] ?? null,
             "recommendations" => $formattedRecommendations,
             "explanation" => $basicExplanation

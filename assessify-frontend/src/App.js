@@ -59,15 +59,16 @@ const handleAssessmentSubmit = (submissionResult) => {
   const selectedChoices = submissionResult?.selected_choices || [];
 
   const maxPossibleScore =
-    selectedChoices.length > 0 ? selectedChoices.length * 3 : 15;
+    selectedChoices.length > 0 ? selectedChoices.length * 5 : 250;
 
   const normalizedRecommendations = rawRecommendations.map((program, index) => {
-    const totalScore = Number(program.total_score || 0);
-
-    const correctPercentage =
-      maxPossibleScore > 0
-        ? Math.round((totalScore / maxPossibleScore) * 100)
-        : 0;
+    // Prefer backend calculated percentage/match_percentage if available
+    const backendPercentage = program.match_percentage ?? program.percentage ?? program.matchPercentage;
+    const correctPercentage = backendPercentage !== undefined && backendPercentage !== null
+      ? Math.round(Number(backendPercentage))
+      : (maxPossibleScore > 0
+          ? Math.round((Number(program.total_score || 0) / maxPossibleScore) * 100)
+          : 0);
 
     return {
       ...program,

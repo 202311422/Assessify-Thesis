@@ -141,7 +141,7 @@ try {
     }
 
     foreach ($programScores as &$program) {
-        $percentage = ($program["raw_score"] / 15) * 100;
+        $percentage = ($program["raw_score"] / $totalPossibleScore) * 100;
 
         if ($percentage > 100) {
             $percentage = 100;

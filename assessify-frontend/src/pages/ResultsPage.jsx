@@ -66,21 +66,22 @@ export default function ResultsPage({
   const recommendations = result?.recommendations || [];
 
   const getPercentage = (program) => {
-  if (!program) return 0;
+    if (!program) return 0;
 
-  const totalScore = Number(program.total_score || 0);
+    // Prefer pre-calculated percentage/match_percentage from backend
+    const pct = program.percentage ?? program.match_percentage ?? program.matchPercentage;
+    if (pct !== undefined && pct !== null) {
+      return Math.round(Number(pct));
+    }
 
-  if (totalScore > 0) {
-    return Math.round((totalScore / 15) * 100);
-  }
+    const totalScore = Number(program.total_score || 0);
+    if (totalScore > 0) {
+      const maxScore = Number(result?.total_possible_score || 250);
+      return Math.round((totalScore / maxScore) * 100);
+    }
 
-  return Number(
-    program.match_percentage ??
-      program.percentage ??
-      program.matchPercentage ??
-      0
-  );
-};
+    return 0;
+  };
 
   const topProgram =
     result?.top_program ||
